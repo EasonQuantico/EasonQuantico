@@ -619,6 +619,31 @@ ul{margin:0;padding:0;list-style:none;}
 .btn-danger{border-color:rgba(255,125,125,.35);color:#ffb3b3;background:rgba(255,125,125,.05);}
 .btn-danger:hover{background:rgba(255,125,125,.14);}
 
+/* ---------- ADMIN 密码门 ---------- */
+#adminGate{
+  position:fixed;inset:0;z-index:180;
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+#adminGate.open{display:flex;}
+.admin-gate-mask{position:absolute;inset:0;background:rgba(2,5,10,.72);backdrop-filter:blur(6px);}
+.admin-gate-panel{
+  position:relative;width:min(92vw,360px);
+  border:1px solid var(--line);border-radius:14px;
+  background:linear-gradient(165deg,rgba(12,22,36,.92),rgba(6,11,19,.85));
+  padding:26px 24px 20px;box-shadow:0 30px 80px rgba(0,0,0,.65);
+}
+.admin-gate-panel .tag{font-size:10px;letter-spacing:.24em;color:var(--ink-mute);}
+.admin-gate-panel h3{font-size:19px;margin:10px 0 6px;letter-spacing:.04em;}
+.admin-gate-panel p{color:var(--ink-dim);font-size:13.5px;line-height:1.7;margin:0 0 16px;}
+.admin-gate-panel .row{display:flex;gap:10px;}
+.admin-gate-panel input{
+  flex:1;min-width:0;background:rgba(79,216,255,.05);border:1px solid var(--line);
+  border-radius:9px;color:var(--ink);font-family:var(--font-mono);font-size:14px;
+  padding:10px 12px;outline:none;letter-spacing:.14em;
+}
+.admin-gate-panel input:focus{border-color:rgba(79,216,255,.5);}
+.admin-gate-panel .err{color:#ff8f8f;font-size:11.5px;margin:10px 0 0;min-height:14px;}
+
 /* ============================================================
    GATE / 访问验证
    ============================================================ */
@@ -822,13 +847,26 @@ body.locked{overflow:hidden;}
 </div>
 
 <!-- ================= ADMIN · 内容管理抽屉 ================= -->
+<div id="adminGate" aria-hidden="true">
+  <div class="admin-gate-mask" id="adminGateMask"></div>
+  <div class="admin-gate-panel" role="dialog" aria-modal="true" aria-label="后台验证">
+    <span class="mono tag">ADMIN · AUTH</span>
+    <h3>后台验证</h3>
+    <p>此入口用于编辑全网同步的分享内容，请输入管理密码。</p>
+    <form class="row" id="adminGateForm">
+      <input type="password" id="adminGatePass" placeholder="管理密码" autocomplete="current-password" aria-label="管理密码">
+      <button class="btn btn-primary" type="submit">验证</button>
+    </form>
+    <p class="mono err" id="adminGateErr" role="alert"></p>
+  </div>
+</div>
 <div class="admin" id="admin" aria-hidden="true">
   <div class="admin-mask" data-admin-close></div>
   <aside class="admin-panel" role="dialog" aria-label="分享内容管理">
     <div class="admin-head">
       <div>
         <b>分享内容管理</b>
-        <span class="mono">SHARES CONSOLE · LOCAL</span>
+        <span class="mono" id="cloudState">CLOUD · CONNECTING…</span>
       </div>
       <button class="admin-x" type="button" data-admin-close aria-label="关闭">✕</button>
     </div>
@@ -1254,6 +1292,7 @@ body.locked{overflow:hidden;}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
 <script>
 (function(){
   "use strict";
@@ -1515,6 +1554,23 @@ body.locked{overflow:hidden;}
     });
   }
 
+  /* ---------- 8.5 云端同步：分享动态存云端，一处编辑全网可见 ---------- */
+  var WB_CFG = {
+    endpoint: "https://kuangye-homepage.app.workbuddy.host",
+    publishableKey: "wbpk_fPA1lxoUQciQJFgVIpo0ud_igd41BQpuYPUoXLTXpsDvz6Q3br859A8"
+  };
+  var cloud = null, cloudReady = false;
+  try {
+    if (window.WorkBuddyCloud && WorkBuddyCloud.createWorkBuddyCloud) {
+      cloud = WorkBuddyCloud.createWorkBuddyCloud({ endpoint: WB_CFG.endpoint, publishableKey: WB_CFG.publishableKey });
+      cloudReady = true;
+    }
+  } catch(e){ cloud = null; cloudReady = false; }
+  function setCloudState(txt, bad){
+    var el = document.getElementById("cloudState");
+    if (el) { el.textContent = "CLOUD · " + txt; el.style.color = bad ? "#ff8f8f" : ""; }
+  }
+
   /* ---------- 9. 分享动态：卡片堆叠 ---------- */
   var LS_KEY = "ky_shares_v1";
   var DEFAULT_SHARES = [
@@ -1533,6 +1589,7 @@ body.locked{overflow:hidden;}
   var countEl = document.getElementById("deckCount");
   var shares = loadShares();
   var cur = 0, deckBusy = false;
+  var cloudMode = false; /* true = 数据已与云端同步 */
 
   function loadShares(){
     try {
@@ -1540,6 +1597,40 @@ body.locked{overflow:hidden;}
       if (Array.isArray(s) && s.length) { return s; }
     } catch(e){}
     return JSON.parse(JSON.stringify(DEFAULT_SHARES));
+  }
+  function rowToItem(r){
+    return { id: r.id, so: r.sort_order, tag: r.tag, date: r.date, title: r.title, desc: r.body, link: r.link, linkText: r.link_text };
+  }
+  function itemToRow(it, so){
+    return { tag: it.tag || "动态", date: it.date || "", title: it.title || "（无标题）",
+             body: it.desc || "", link: it.link || "",
+             link_text: it.linkText || (it.link ? "查看链接" : ""), sort_order: so || 0 };
+  }
+  function cloudReload(){
+    if (!cloudReady) { setCloudState("OFFLINE · 本地模式", true); return; }
+    cloud.database.from("share_posts").select("*")
+      .order("sort_order", { ascending: false }).order("id", { ascending: true })
+      .then(function(res){
+        if (res && res.error) { throw res.error; }
+        var rows = (res && res.data) || [];
+        if (rows.length) {
+          shares = rows.map(rowToItem);
+          cloudMode = true;
+          persistShares();
+          cur = 0;
+          renderDeck();
+          if (admin.classList.contains("open")) { renderAdminList(); }
+          setCloudState("CONNECTED · 全网同步");
+        } else {
+          /* 空表 → 播种默认内容 */
+          var seed = JSON.parse(JSON.stringify(DEFAULT_SHARES)).map(function(it, i){ return itemToRow(it, 50 - i * 10); });
+          return cloud.database.from("share_posts").insert(seed).then(function(){ return cloudReload(); });
+        }
+      })
+      .catch(function(){
+        cloudMode = false;
+        setCloudState("OFFLINE · 本地模式", true);
+      });
   }
   function esc(s){
     var d = document.createElement("div");
@@ -1614,6 +1705,7 @@ body.locked{overflow:hidden;}
   if (bNext) { bNext.addEventListener("click", deckNext); }
   if (bPrev) { bPrev.addEventListener("click", deckPrev); }
   renderDeck();
+  cloudReload();
 
   /* ---------- 10. 后台：分享内容管理 ---------- */
   var admin = document.getElementById("admin");
@@ -1625,6 +1717,15 @@ body.locked{overflow:hidden;}
   var editIdx = -1;
 
   function persistShares(){ try { localStorage.setItem(LS_KEY, JSON.stringify(shares)); } catch(e){} }
+  function adminFail(e){
+    window.alert("云端操作失败：" + (e && e.message ? e.message : "未知错误") + "。改动未同步，请稍后重试。");
+    cloudReload();
+  }
+  function maxSortOrder(){
+    var m = 0;
+    shares.forEach(function(x){ m = Math.max(m, Number(x.so) || 0); });
+    return m;
+  }
   function resetForm(){
     editIdx = -1;
     fTag.value = fDate.value = fTitle.value = fDesc.value = fLink.value = "";
@@ -1659,9 +1760,24 @@ body.locked{overflow:hidden;}
     var b = e.target.closest("button[data-act]");
     if (!b) { return; }
     var i = parseInt(b.dataset.i, 10), act = b.dataset.act;
+    if (act === "edit") { fillForm(shares[i], i); renderAdminList(); return; }
+    if (cloudMode) {
+      var row = shares[i];
+      if (!row || row.id == null) { return; }
+      if (act === "del") {
+        cloud.database.from("share_posts").delete().eq("id", row.id)
+          .then(function(res){ if (res && res.error) { adminFail(res.error); return; } cloudReload(); })
+          .catch(adminFail);
+      } else if (act === "top") {
+        if (i <= 0) { return; }
+        cloud.database.from("share_posts").update({ sort_order: maxSortOrder() + 10 }).eq("id", row.id)
+          .then(function(res){ if (res && res.error) { adminFail(res.error); return; } cloudReload(); })
+          .catch(adminFail);
+      }
+      return;
+    }
     if (act === "del") { shares.splice(i, 1); }
     else if (act === "top" && i > 0) { shares.unshift(shares.splice(i, 1)[0]); cur = 0; }
-    else if (act === "edit") { fillForm(shares[i], i); renderAdminList(); return; }
     persistShares();
     renderAdminList();
     renderDeck();
@@ -1672,6 +1788,18 @@ body.locked{overflow:hidden;}
     fTitle.style.borderColor = "";
     var obj = { tag: fTag.value.trim() || "动态", date: fDate.value.trim(), title: title,
                 desc: fDesc.value.trim(), link: fLink.value.trim(), linkText: fLink.value.trim() ? "查看链接" : "" };
+    if (cloudMode) {
+      if (editIdx >= 0 && shares[editIdx] && shares[editIdx].id != null) {
+        cloud.database.from("share_posts").update(itemToRow(obj, shares[editIdx].so)).eq("id", shares[editIdx].id)
+          .then(function(res){ if (res && res.error) { adminFail(res.error); return; } resetForm(); cloudReload(); })
+          .catch(adminFail);
+      } else {
+        cloud.database.from("share_posts").insert(itemToRow(obj, maxSortOrder() + 10))
+          .then(function(res){ if (res && res.error) { adminFail(res.error); return; } cur = 0; resetForm(); cloudReload(); })
+          .catch(adminFail);
+      }
+      return;
+    }
     if (editIdx >= 0) { shares[editIdx] = obj; } else { shares.unshift(obj); cur = 0; }
     persistShares();
     renderAdminList();
@@ -1680,14 +1808,24 @@ body.locked{overflow:hidden;}
   });
   document.getElementById("fReset").addEventListener("click", resetForm);
   document.getElementById("aDefaults").addEventListener("click", function(){
-    if (window.confirm("确定恢复默认分享内容？当前修改将被覆盖。")) {
-      shares = JSON.parse(JSON.stringify(DEFAULT_SHARES));
-      cur = 0;
-      persistShares();
-      renderAdminList();
-      renderDeck();
-      resetForm();
+    if (!window.confirm("确定恢复默认分享内容？当前修改将被覆盖（云端 + 本地）。")) { return; }
+    if (cloudMode) {
+      cloud.database.from("share_posts").delete().gt("id", 0)
+        .then(function(res){
+          if (res && res.error) { throw res.error; }
+          var seed = JSON.parse(JSON.stringify(DEFAULT_SHARES)).map(function(it, i){ return itemToRow(it, 50 - i * 10); });
+          return cloud.database.from("share_posts").insert(seed);
+        })
+        .then(function(){ cur = 0; resetForm(); cloudReload(); })
+        .catch(adminFail);
+      return;
     }
+    shares = JSON.parse(JSON.stringify(DEFAULT_SHARES));
+    cur = 0;
+    persistShares();
+    renderAdminList();
+    renderDeck();
+    resetForm();
   });
   document.getElementById("aExport").addEventListener("click", function(){
     try {
@@ -1712,6 +1850,17 @@ body.locked{overflow:hidden;}
         if (!Array.isArray(data)) { throw new Error("format"); }
         data = data.filter(function(x){ return x && typeof x.title === "string"; });
         if (!data.length) { throw new Error("empty"); }
+        if (cloudMode) {
+          var rows = data.map(function(it, i){ return itemToRow(it, data.length * 10 - i * 10); });
+          cloud.database.from("share_posts").delete().gt("id", 0)
+            .then(function(res){
+              if (res && res.error) { throw res.error; }
+              return cloud.database.from("share_posts").insert(rows);
+            })
+            .then(function(){ cur = 0; resetForm(); cloudReload(); })
+            .catch(function(err){ adminFail(err); });
+          return;
+        }
         shares = data;
         cur = 0;
         persistShares();
@@ -1723,12 +1872,51 @@ body.locked{overflow:hidden;}
     r.readAsText(f, "utf-8");
     importFile.value = "";
   });
+  var adminGate = document.getElementById("adminGate");
+  var ADMIN_S = "ky_admin_ok";
+  function adminUnlocked(){ try { return sessionStorage.getItem(ADMIN_S) === "1"; } catch(e){ return false; } }
+  function openAdmin(){
+    renderAdminList();
+    admin.classList.add("open");
+    admin.setAttribute("aria-hidden", "false");
+  }
   var adminBtn = document.getElementById("adminBtn");
   if (adminBtn) {
     adminBtn.addEventListener("click", function(){
-      renderAdminList();
-      admin.classList.add("open");
-      admin.setAttribute("aria-hidden", "false");
+      if (adminUnlocked()) { openAdmin(); return; }
+      adminGate.classList.add("open");
+      adminGate.setAttribute("aria-hidden", "false");
+      setTimeout(function(){ try { document.getElementById("adminGatePass").focus(); } catch(e){} }, 200);
+    });
+  }
+  var adminGateForm = document.getElementById("adminGateForm");
+  if (adminGateForm) {
+    adminGateForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var inp = document.getElementById("adminGatePass");
+      var errEl = document.getElementById("adminGateErr");
+      var v = inp.value;
+      if (!v) { return; }
+      sha256hex(v).then(function(h){
+        if (h === GATE_HASH || h === GATE_FB) {
+          try { sessionStorage.setItem(ADMIN_S, "1"); } catch(e){} /* 本次会话内免重复验证 */
+          inp.value = "";
+          errEl.textContent = "";
+          adminGate.classList.remove("open");
+          adminGate.setAttribute("aria-hidden", "true");
+          openAdmin();
+        } else {
+          errEl.textContent = "密码错误 · 请重试";
+          inp.select();
+        }
+      });
+    });
+  }
+  var adminGateMask = document.getElementById("adminGateMask");
+  if (adminGateMask) {
+    adminGateMask.addEventListener("click", function(){
+      adminGate.classList.remove("open");
+      adminGate.setAttribute("aria-hidden", "true");
     });
   }
   [].slice.call(admin.querySelectorAll("[data-admin-close]")).forEach(function(el){
