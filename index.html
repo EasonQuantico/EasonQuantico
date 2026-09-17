@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>匡烨 · AI 应用 / 嵌入式 / 光电系统工程师</title>
+<meta name="description" content="匡烨 — 长春理工大学信息对抗技术专业。AI 应用工程师 / 嵌入式工程师 / 光电系统工程师。具备嵌入式全链路落地能力与 AI Agent 工程化工作流实践。">
+<meta name="theme-color" content="#04070d">
+<meta property="og:title" content="匡烨 · AI 应用 / 嵌入式 / 光电系统工程师">
+<meta property="og:description" content="从原理图到样机，从 Agent 工作流到光电仿真。">
+<meta property="og:type" content="profile">
+
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --bg:#04070d;
+  --bg-2:#070c15;
+  --panel:rgba(9,17,29,.55);
+  --panel-2:rgba(11,22,36,.74);
+  --ink:#e8f2fc;
+  --ink-dim:#9fb4c8;
+  --ink-mute:#69808f;
+  --cyan:#4fd8ff;
+  --cyan-soft:#8fe6ff;
+  --cyan-deep:#14a3d4;
+  --blue:#2b7fc0;
+  --line:rgba(79,216,255,.16);
+  --line-soft:rgba(79,216,255,.08);
+  --glow:0 0 24px rgba(79,216,255,.28);
+  --font-sans:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Noto Sans SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono","Cascadia Mono",Consolas,"SFMono-Regular","Courier New",monospace;
+  --wrap:1240px;
+  --pad-x:clamp(20px,5vw,48px);
+  --sec-y:clamp(76px,9vw,132px);
+  --r:14px;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html{scroll-behavior:smooth;overflow-x:clip;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-sans);
+  font-size:16px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:clip;
+  max-width:100%;
+}
+img,video{display:block;max-width:100%;}
+a{color:inherit;text-decoration:none;}
+h1,h2,h3,h4{margin:0;line-height:1.15;font-weight:700;letter-spacing:.01em;}
+p{margin:0;}
+ul{margin:0;padding:0;list-style:none;}
+::selection{background:rgba(79,216,255,.3);color:#fff;}
+
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:4px;}
+
+/* ============================================================
+   SHARED
+   ============================================================ */
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--pad-x);}
+.mono{font-family:var(--font-mono);}
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.eyebrow::before{
+  content:"";
+  width:26px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan));
+}
+.sec-head{margin-bottom:clamp(36px,4.5vw,60px);}
+.sec-title{
+  font-size:clamp(28px,4vw,46px);
+  margin:16px 0 12px;
+  letter-spacing:-.01em;
+}
+.sec-title .en{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:clamp(11px,1.1vw,13px);
+  font-weight:400;
+  letter-spacing:.3em;
+  color:var(--ink-mute);
+  margin-top:12px;
+  text-transform:uppercase;
+}
+.sec-sub{color:var(--ink-dim);max-width:64ch;font-size:15px;}
+
+.rule{
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--line) 12%,var(--line) 88%,transparent);
+  border:0;margin:0;
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{
+  position:fixed;inset:0 0 auto 0;z-index:90;
+  transition:background .35s ease,border-color .35s ease,backdrop-filter .35s ease;
+  border-bottom:1px solid transparent;
+}
+.nav.solid{
+  background:rgba(4,7,13,.72);
+  backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);
+  border-bottom-color:var(--line-soft);
+}
+.nav-in{
+  max-width:var(--wrap);margin:0 auto;padding:0 var(--pad-x);
+  height:70px;display:flex;align-items:center;gap:24px;
+}
+.brand{display:flex;align-items:center;gap:12px;flex:0 0 auto;}
+.brand svg{width:26px;height:26px;flex:0 0 auto;}
+.brand b{font-size:16px;letter-spacing:.14em;font-weight:700;}
+.brand span{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;
+  color:var(--ink-mute);border-left:1px solid var(--line);
+  padding-left:10px;text-transform:uppercase;
+}
+.nav-links{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.nav-links a{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
+  color:var(--ink-dim);padding:9px 13px;border-radius:9px;
+  transition:color .2s,background .2s;
+  white-space:nowrap;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--cyan);background:rgba(79,216,255,.07);}
+.nav-cta{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
+  padding:10px 18px;border:1px solid var(--line);border-radius:9px;
+  color:var(--cyan-soft);background:rgba(79,216,255,.06);
+  transition:.25s;white-space:nowrap;
+}
+.nav-cta:hover{background:rgba(79,216,255,.16);box-shadow:var(--glow);}
+.burger{
+  display:none;margin-left:auto;width:42px;height:42px;
+  background:none;border:1px solid var(--line);border-radius:10px;
+  cursor:pointer;padding:0;place-items:center;
+}
+.burger span{display:block;width:17px;height:1.5px;background:var(--ink);margin:3.5px auto;transition:.3s;}
+.nav.open .burger span:nth-child(1){transform:translateY(5px) rotate(45deg);}
+.nav.open .burger span:nth-child(2){opacity:0;}
+.nav.open .burger span:nth-child(3){transform:translateY(-5px) rotate(-45deg);}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  position:relative;
+  min-height:100vh;
+  min-height:100svh;
+  display:flex;flex-direction:column;justify-content:center;
+  overflow:hidden;isolation:isolate;
+  padding:110px 0 72px;
+}
+.hero-bg{position:absolute;inset:0;z-index:0;background:radial-gradient(120% 90% at 50% 0%,#0b1725 0%,#04070d 72%);}
+#stars{position:absolute;inset:0;width:100%;height:100%;}
+.hero-video{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:50% 46%;
+  opacity:.92;transition:opacity .9s ease;
+  transform-origin:50% 55%;
+  animation:drift 34s ease-in-out infinite alternate;
+}
+.hero-video.ready{opacity:.92;}
+@keyframes drift{
+  from{transform:scale(1.02) translate3d(0,0,0);}
+  to{transform:scale(1.12) translate3d(0,-1.6%,0);}
+}
+/* 与视频循环同步的“呼吸”遮罩：把硬循环点变成平滑过渡 */
+.hero-seam{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(115% 95% at 50% 45%,rgba(4,7,13,0) 38%,rgba(4,7,13,.86) 100%);
+  animation:seam 5.04s linear infinite;
+}
+@keyframes seam{
+  0%{opacity:.5;}
+  20%{opacity:0;}
+  80%{opacity:0;}
+  100%{opacity:.5;}
+}
+.hero-grid{
+  position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.5;
+  background-image:
+    linear-gradient(rgba(79,216,255,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(79,216,255,.055) 1px,transparent 1px);
+  background-size:76px 76px;
+  mask-image:radial-gradient(120% 100% at 50% 40%,#000 30%,transparent 84%);
+  -webkit-mask-image:radial-gradient(120% 100% at 50% 40%,#000 30%,transparent 84%);
+}
+.hero-scan{
+  position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.55;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.028) 0 1px,transparent 1px 3px);
+}
+.hero-sweep{
+  position:absolute;left:0;right:0;height:220px;z-index:2;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,rgba(79,216,255,.07),transparent);
+  animation:sweep 7.5s linear infinite;
+}
+@keyframes sweep{
+  0%{top:-24%;opacity:0;}
+  12%{opacity:1;}
+  88%{opacity:1;}
+  100%{top:112%;opacity:0;}
+}
+.hero-fade{
+  position:absolute;inset:auto 0 0 0;height:44%;z-index:3;pointer-events:none;
+  background:linear-gradient(to top,var(--bg) 6%,rgba(4,7,13,.72) 42%,transparent 100%);
+}
+.hero-in{
+  position:relative;z-index:4;width:100%;
+  max-width:var(--wrap);margin:0 auto;padding:0 var(--pad-x);
+}
+.hero-status{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;
+  color:var(--ink-dim);text-transform:uppercase;
+  border:1px solid var(--line);border-radius:100px;
+  padding:7px 15px;margin-bottom:26px;
+  background:rgba(4,7,13,.5);backdrop-filter:blur(8px);
+}
+.dot{
+  width:6px;height:6px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 0 0 rgba(79,216,255,.65);animation:pulse 2.2s infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(79,216,255,.6);}
+  70%{box-shadow:0 0 0 9px rgba(79,216,255,0);}
+  100%{box-shadow:0 0 0 0 rgba(79,216,255,0);}
+}
+.hero h1{
+  font-size:clamp(52px,9.2vw,116px);
+  letter-spacing:.06em;line-height:.98;
+  text-shadow:0 0 60px rgba(79,216,255,.16);
+}
+.hero h1 .ye{color:var(--cyan-soft);}
+.hero-en{
+  font-family:var(--font-mono);
+  font-size:clamp(10px,1.2vw,13px);letter-spacing:.5em;
+  color:var(--cyan);margin-top:16px;text-transform:uppercase;
+}
+.hero-role{
+  font-size:clamp(16px,1.9vw,21px);color:var(--ink);margin-top:22px;
+  font-weight:600;letter-spacing:.02em;
+}
+.hero-role em{font-style:normal;color:var(--cyan);}
+.hero-edu{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  color:var(--ink-dim);font-size:14px;margin-top:12px;
+}
+.hero-edu .sep{color:var(--ink-mute);}
+.hero-desc{color:var(--ink-dim);font-size:15px;margin-top:18px;max-width:56ch;}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px;}
+.chip{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;
+  color:var(--ink-dim);border:1px solid var(--line);
+  background:rgba(9,17,29,.5);border-radius:8px;padding:8px 13px;
+  backdrop-filter:blur(6px);transition:.25s;
+}
+.chip:hover{color:var(--cyan-soft);border-color:rgba(79,216,255,.4);}
+.hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px;}
+
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);font-size:13px;letter-spacing:.1em;
+  padding:15px 26px;border-radius:11px;cursor:pointer;
+  border:1px solid transparent;transition:.28s;white-space:nowrap;
+}
+.btn svg{width:15px;height:15px;flex:0 0 auto;}
+.btn-primary{
+  background:linear-gradient(135deg,rgba(79,216,255,.2),rgba(20,163,212,.14));
+  border-color:rgba(79,216,255,.5);color:#eafaff;
+  box-shadow:0 0 0 0 rgba(79,216,255,.32),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.btn-primary:hover{
+  background:linear-gradient(135deg,rgba(79,216,255,.32),rgba(20,163,212,.2));
+  box-shadow:0 0 30px rgba(79,216,255,.3);transform:translateY(-2px);
+}
+.btn-ghost{border-color:var(--line);color:var(--ink-dim);background:rgba(9,17,29,.42);}
+.btn-ghost:hover{color:var(--ink);border-color:rgba(79,216,255,.34);transform:translateY(-2px);}
+
+/* ID 徽章：小型化头像，融入文案流 */
+.hero-copy{min-width:0;}
+.hero-id-row{
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  margin-bottom:26px;
+}
+.hero-status{margin-bottom:0;}
+.id-badge{
+  position:relative;width:78px;height:78px;flex:0 0 auto;
+  filter:drop-shadow(0 10px 26px rgba(0,0,0,.55));
+}
+.id-badge .clip{
+  position:absolute;inset:3px;
+  clip-path:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%);
+  background:linear-gradient(135deg,rgba(79,216,255,.6),rgba(20,163,212,.22));
+}
+.id-badge img{
+  position:absolute;inset:4.5px;
+  width:calc(100% - 9px);height:calc(100% - 9px);
+  object-fit:cover;object-position:50% 26%;
+  clip-path:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%);
+  filter:saturate(.92) contrast(1.05) brightness(.95);
+}
+.id-badge::after{
+  content:"";position:absolute;inset:-6px;border-radius:50%;
+  border:1px dashed rgba(79,216,255,.42);
+  animation:spin 16s linear infinite;
+}
+.id-badge .id-dot{
+  position:absolute;right:1px;bottom:1px;z-index:2;
+  width:11px;height:11px;border-radius:50%;
+  background:var(--cyan);border:2.5px solid #0a1420;
+  box-shadow:0 0 10px rgba(79,216,255,.85);
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.scroll-cue{
+  position:absolute;left:50%;bottom:26px;transform:translateX(-50%);
+  z-index:4;display:flex;flex-direction:column;align-items:center;gap:9px;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.26em;
+  color:var(--ink-mute);text-transform:uppercase;
+}
+.scroll-cue i{
+  display:block;width:1px;height:44px;
+  background:linear-gradient(to bottom,var(--cyan),transparent);
+  animation:cue 2.1s ease-in-out infinite;
+}
+@keyframes cue{0%,100%{opacity:.25;transform:scaleY(.55);}50%{opacity:1;transform:scaleY(1);}}
+
+/* ============================================================
+   METRICS
+   ============================================================ */
+.metrics{border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);background:var(--bg-2);}
+.metrics-in{
+  max-width:var(--wrap);margin:0 auto;padding:clamp(30px,4vw,46px) var(--pad-x);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(16px,3vw,30px);
+}
+.metric{border-left:1px solid var(--line);padding-left:clamp(14px,2vw,22px);}
+.metric .n{
+  font-family:var(--font-mono);font-weight:700;
+  font-size:clamp(30px,4.4vw,50px);color:var(--cyan);line-height:1;
+  letter-spacing:-.02em;
+}
+.metric .n small{font-size:.46em;color:var(--cyan-deep);margin-left:3px;}
+.metric .l{
+  display:block;margin-top:12px;font-size:12.5px;color:var(--ink-dim);
+  font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;
+}
+
+/* ============================================================
+   FEATURES / 能力矩阵
+   ============================================================ */
+.sec{padding:var(--sec-y) 0;position:relative;}
+.cards{display:grid;gap:18px;}
+.cards.c3{grid-template-columns:repeat(3,1fr);}
+.cards.c2{grid-template-columns:repeat(2,1fr);}
+.card{
+  position:relative;border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(160deg,rgba(12,22,36,.66),rgba(6,11,19,.5));
+  padding:clamp(22px,2.6vw,32px);
+  backdrop-filter:blur(10px);
+  transition:transform .35s cubic-bezier(.2,.7,.3,1),border-color .35s,box-shadow .35s;
+  overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;opacity:0;transition:opacity .4s;
+  background:radial-gradient(420px 220px at var(--mx,50%) var(--my,0%),rgba(79,216,255,.1),transparent 70%);
+  pointer-events:none;
+}
+.card:hover{transform:translateY(-5px);border-color:rgba(79,216,255,.34);box-shadow:0 22px 54px rgba(0,0,0,.5);}
+.card:hover::before{opacity:1;}
+.card .idx{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;
+  color:var(--cyan-deep);display:block;margin-bottom:18px;
+}
+.card .ico{
+  width:44px;height:44px;border:1px solid var(--line);border-radius:10px;
+  display:grid;place-items:center;margin-bottom:18px;
+  background:rgba(79,216,255,.05);color:var(--cyan);
+}
+.card .ico svg{width:21px;height:21px;}
+.card h3{font-size:18px;margin-bottom:11px;letter-spacing:.03em;}
+.card p{color:var(--ink-dim);font-size:14.2px;line-height:1.78;}
+.card .tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px;}
+.card .tags span{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;
+  color:var(--ink-mute);border:1px solid var(--line-soft);
+  padding:4px 9px;border-radius:6px;
+}
+
+/* ============================================================
+   ARCHIVE / 项目档案
+   ============================================================ */
+.entry{
+  position:relative;border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(160deg,rgba(12,22,36,.6),rgba(6,11,19,.46));
+  backdrop-filter:blur(9px);
+  padding:clamp(24px,3vw,38px);
+  transition:border-color .35s,transform .35s;
+}
+.entry + .entry{margin-top:16px;}
+.entry:hover{border-color:rgba(79,216,255,.3);}
+.entry.flag{
+  border-color:rgba(79,216,255,.36);
+  background:linear-gradient(160deg,rgba(16,32,50,.72),rgba(6,11,19,.5));
+  box-shadow:0 0 0 1px rgba(79,216,255,.07),0 24px 60px rgba(0,0,0,.45);
+}
+.entry-top{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:20px;flex-wrap:wrap;margin-bottom:6px;
+}
+.entry h3{font-size:clamp(17px,2vw,21px);letter-spacing:.02em;}
+.entry .role{
+  display:block;font-size:13.5px;color:var(--cyan);margin-top:9px;
+  font-weight:600;letter-spacing:.02em;
+}
+.entry .date{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.12em;
+  color:var(--ink-mute);border:1px solid var(--line-soft);
+  padding:6px 12px;border-radius:100px;white-space:nowrap;flex:0 0 auto;
+}
+.entry.flag .date{color:var(--cyan);border-color:var(--line);}
+.entry-body{margin-top:20px;display:grid;gap:11px;}
+.entry-body li{
+  position:relative;padding-left:22px;color:var(--ink-dim);
+  font-size:14.4px;line-height:1.8;
+}
+.entry-body li::before{
+  content:"";position:absolute;left:2px;top:9px;width:5px;height:5px;
+  background:var(--cyan);box-shadow:0 0 8px rgba(79,216,255,.7);
+}
+.badge{
+  display:inline-block;font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.18em;color:var(--cyan);border:1px solid var(--line);
+  border-radius:100px;padding:4px 10px;margin-bottom:14px;text-transform:uppercase;
+  background:rgba(79,216,255,.07);
+}
+
+/* ============================================================
+   RECOGNITION / 荣誉认证
+   ============================================================ */
+.award{
+  position:relative;display:flex;align-items:center;gap:clamp(16px,2.4vw,28px);
+  border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(120deg,rgba(12,22,36,.6),rgba(6,11,19,.42));
+  padding:clamp(18px,2.2vw,24px) clamp(20px,2.6vw,30px);
+  backdrop-filter:blur(9px);transition:.32s;
+}
+.award + .award{margin-top:12px;}
+.award:hover{border-color:rgba(79,216,255,.32);transform:translateX(5px);}
+.award .yr{
+  font-family:var(--font-mono);font-weight:700;
+  font-size:clamp(17px,2.1vw,23px);color:var(--cyan);
+  min-width:74px;flex:0 0 auto;letter-spacing:.02em;
+}
+.award .txt{flex:1 1 auto;min-width:0;}
+.award .txt b{display:block;font-size:15.4px;color:var(--ink);font-weight:700;}
+.award .txt span{display:block;font-size:13.4px;color:var(--ink-dim);margin-top:5px;}
+.award .lvl{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;
+  color:var(--cyan-soft);border:1px solid var(--line);
+  padding:6px 12px;border-radius:100px;white-space:nowrap;flex:0 0 auto;
+}
+.award.plain .txt b{font-weight:400;}
+
+/* ============================================================
+   SHARES / 分享动态 · 卡片堆叠
+   ============================================================ */
+.deck{position:relative;max-width:780px;margin:0 auto;height:400px;perspective:1400px;}
+.share-card{
+  position:absolute;inset:0;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:linear-gradient(160deg,rgba(12,22,36,.78),rgba(6,11,19,.6));
+  backdrop-filter:blur(10px);
+  padding:clamp(26px,3.4vw,40px);
+  display:flex;flex-direction:column;gap:0;
+  transform:translateY(18px) scale(.93);opacity:0;
+  transition:transform .55s cubic-bezier(.2,.7,.3,1),opacity .5s ease,border-color .3s;
+  pointer-events:none;
+  will-change:transform,opacity;
+  box-shadow:0 24px 60px rgba(0,0,0,.45);
+}
+.share-card.on{transform:none;opacity:1;pointer-events:auto;z-index:5;}
+.share-card.n1{transform:translateY(-16px) scale(.965) rotate(.7deg);opacity:.55;z-index:4;}
+.share-card.n2{transform:translateY(-30px) scale(.93) rotate(-.9deg);opacity:.3;z-index:3;}
+.share-card.n3{transform:translateY(-42px) scale(.9) rotate(.5deg);opacity:.15;z-index:2;}
+.share-card.gone{transform:translateX(52%) translateY(4%) rotate(7deg) scale(.88);opacity:0;z-index:1;}
+.share-card .badge{margin-bottom:0;}
+.share-meta{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:16px 0 14px;
+}
+.share-meta .dt{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.14em;
+  color:var(--ink-mute);
+}
+.share-card h3{font-size:clamp(20px,2.4vw,26px);letter-spacing:.02em;}
+.share-card p{color:var(--ink-dim);font-size:14.6px;line-height:1.85;margin-top:14px;}
+.share-card .share-link{
+  margin-top:auto;padding-top:22px;display:inline-flex;
+}
+.share-card .share-link a{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;
+  color:var(--cyan-soft);border:1px solid var(--line);border-radius:9px;
+  padding:10px 18px;background:rgba(79,216,255,.06);transition:.25s;
+  display:inline-flex;align-items:center;gap:9px;
+}
+.share-card .share-link a:hover{background:rgba(79,216,255,.16);box-shadow:var(--glow);}
+.deck-ctrl{
+  display:flex;align-items:center;justify-content:center;gap:22px;
+  margin-top:30px;
+}
+.deck-btn{
+  width:46px;height:46px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:rgba(9,17,29,.55);color:var(--ink-dim);
+  display:grid;place-items:center;transition:.25s;
+}
+.deck-btn:hover{color:var(--cyan);border-color:rgba(79,216,255,.4);box-shadow:var(--glow);}
+.deck-btn svg{width:17px;height:17px;}
+.deck-count{
+  font-family:var(--font-mono);font-size:12.5px;letter-spacing:.2em;color:var(--ink-mute);
+  min-width:74px;text-align:center;
+}
+.deck-count b{color:var(--cyan);font-weight:500;}
+.deck-hint{
+  text-align:center;font-family:var(--font-mono);font-size:10.5px;
+  letter-spacing:.22em;color:var(--ink-mute);margin-top:16px;text-transform:uppercase;
+}
+
+/* ============================================================
+   ADMIN / 内容管理抽屉
+   ============================================================ */
+.admin-link{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  color:var(--ink-mute);background:none;border:1px solid transparent;
+  border-radius:6px;padding:4px 10px;cursor:pointer;transition:.25s;
+}
+.admin-link:hover{color:var(--cyan);border-color:var(--line);}
+.admin{position:fixed;inset:0;z-index:150;visibility:hidden;pointer-events:none;}
+.admin.open{visibility:visible;pointer-events:auto;}
+.admin-mask{
+  position:absolute;inset:0;background:rgba(2,4,8,.66);
+  backdrop-filter:blur(4px);opacity:0;transition:opacity .35s;
+}
+.admin.open .admin-mask{opacity:1;}
+.admin-panel{
+  position:absolute;top:0;right:0;bottom:0;width:min(94vw,460px);
+  background:linear-gradient(165deg,#0a1322,#060b13);
+  border-left:1px solid var(--line);
+  display:flex;flex-direction:column;
+  transform:translateX(102%);transition:transform .42s cubic-bezier(.2,.7,.3,1);
+  box-shadow:-30px 0 80px rgba(0,0,0,.6);
+}
+.admin.open .admin-panel{transform:none;}
+.admin-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 22px;border-bottom:1px solid var(--line-soft);
+}
+.admin-head b{font-size:15px;letter-spacing:.06em;}
+.admin-head .mono{font-size:10px;color:var(--ink-mute);letter-spacing:.18em;display:block;margin-top:4px;}
+.admin-x{
+  width:36px;height:36px;border-radius:9px;border:1px solid var(--line);
+  background:none;color:var(--ink-dim);cursor:pointer;font-size:16px;
+}
+.admin-x:hover{color:var(--cyan);}
+.admin-body{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px;}
+.fld{display:flex;flex-direction:column;gap:7px;}
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fld label{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;
+  color:var(--ink-mute);text-transform:uppercase;
+}
+.fld input,.fld textarea{
+  background:rgba(4,8,14,.7);border:1px solid var(--line-soft);border-radius:9px;
+  color:var(--ink);font-family:var(--font-sans);font-size:13.5px;
+  padding:10px 12px;outline:none;transition:border-color .2s;
+}
+.fld textarea{resize:vertical;min-height:74px;line-height:1.65;}
+.fld input:focus,.fld textarea:focus{border-color:rgba(79,216,255,.45);}
+.admin-list{display:flex;flex-direction:column;gap:10px;}
+.admin-item{
+  display:flex;align-items:center;gap:12px;
+  border:1px solid var(--line-soft);border-radius:10px;
+  padding:11px 13px;background:rgba(9,17,29,.4);
+}
+.admin-item .tt{flex:1;min-width:0;}
+.admin-item .tt b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-item .tt span{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.1em;}
+.admin-item button{
+  border:1px solid var(--line-soft);background:none;color:var(--ink-mute);
+  border-radius:7px;padding:6px 10px;font-size:11.5px;cursor:pointer;transition:.2s;
+  font-family:var(--font-mono);letter-spacing:.06em;
+}
+.admin-item button:hover{color:var(--cyan);border-color:rgba(79,216,255,.4);}
+.admin-item button.del:hover{color:#ff7d7d;border-color:rgba(255,125,125,.4);}
+.admin-lb{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;
+  color:var(--ink-mute);text-transform:uppercase;
+  display:flex;align-items:center;gap:12px;margin-top:6px;
+}
+.admin-lb::after{content:"";flex:1;height:1px;background:var(--line-soft);}
+.admin-foot{
+  display:flex;flex-wrap:wrap;gap:10px;
+  padding:18px 22px;border-top:1px solid var(--line-soft);
+}
+.admin-foot .btn{padding:11px 16px;font-size:11.5px;flex:1 1 auto;justify-content:center;}
+.btn-danger{border-color:rgba(255,125,125,.35);color:#ffb3b3;background:rgba(255,125,125,.05);}
+.btn-danger:hover{background:rgba(255,125,125,.14);}
+
+/* ============================================================
+   GATE / 访问验证
+   ============================================================ */
+#gate{
+  position:fixed;inset:0;z-index:200;
+  background:radial-gradient(120% 100% at 50% 0%,#0b1725 0%,#04070d 68%);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  transition:opacity .8s ease,visibility .8s;
+}
+#gate.open{opacity:0;visibility:hidden;pointer-events:none;}
+body.locked{overflow:hidden;}
+.gate-panel{
+  position:relative;width:min(94vw,460px);
+  border:1px solid var(--line);border-radius:16px;
+  background:linear-gradient(165deg,rgba(12,22,36,.85),rgba(6,11,19,.7));
+  backdrop-filter:blur(16px);
+  padding:clamp(30px,5vw,46px);
+  overflow:hidden;
+  box-shadow:0 40px 120px rgba(0,0,0,.7),0 0 0 1px rgba(79,216,255,.05);
+}
+.gate-panel::after{
+  content:"";position:absolute;left:0;right:0;height:30%;top:-30%;
+  background:linear-gradient(to bottom,transparent,rgba(79,216,255,.1),transparent);
+  animation:hudscan 4.2s linear infinite;pointer-events:none;
+}
+.gate-panel.shake{animation:shake .5s ease;}
+@keyframes shake{
+  10%,90%{transform:translateX(-2px);}
+  20%,80%{transform:translateX(4px);}
+  30%,50%,70%{transform:translateX(-7px);}
+  40%,60%{transform:translateX(7px);}
+}
+.gate-tag{
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.24em;
+  color:var(--ink-mute);text-transform:uppercase;margin-bottom:30px;
+}
+.gate-tag i{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 2.2s infinite;}
+.gate-logo{
+  width:168px;height:auto;display:block;margin-bottom:22px;
+  mix-blend-mode:screen;               /* 黑底融进深色面板，只留 SYHQ 白字 */
+  filter:brightness(1.06) drop-shadow(0 0 22px rgba(79,216,255,.25));
+}
+.gate-panel h1{font-size:clamp(24px,4vw,30px);letter-spacing:.04em;}
+.gate-panel .gate-sub{color:var(--ink-dim);font-size:14px;margin-top:12px;line-height:1.75;}
+.gate-form{display:flex;gap:10px;margin-top:26px;}
+.gate-form input{
+  flex:1;min-width:0;
+  background:rgba(4,8,14,.75);border:1px solid var(--line);border-radius:11px;
+  color:var(--ink);font-family:var(--font-mono);font-size:14px;letter-spacing:.2em;
+  padding:14px 16px;outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.gate-form input:focus{border-color:rgba(79,216,255,.55);box-shadow:var(--glow);}
+.gate-form input::placeholder{letter-spacing:.1em;color:var(--ink-mute);}
+.gate-remember{
+  display:flex;align-items:center;gap:9px;margin-top:16px;
+  font-size:12.5px;color:var(--ink-mute);cursor:pointer;user-select:none;
+}
+.gate-remember input{accent-color:var(--cyan);width:14px;height:14px;cursor:pointer;}
+.gate-err{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;
+  color:#ff8f8f;margin-top:14px;min-height:16px;
+}
+.gate-foot{
+  display:flex;justify-content:space-between;
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:.2em;
+  color:var(--ink-mute);text-transform:uppercase;
+  margin-top:34px;padding-top:18px;border-top:1px solid var(--line-soft);
+}
+
+.course-cloud{margin-top:44px;}
+.course-cloud .lb{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;
+  color:var(--ink-mute);text-transform:uppercase;margin-bottom:16px;
+  display:flex;align-items:center;gap:12px;
+}
+.course-cloud .lb::after{content:"";flex:1;height:1px;background:var(--line-soft);}
+.course-cloud ul{display:flex;flex-wrap:wrap;gap:9px;}
+.course-cloud li{
+  font-size:13px;color:var(--ink-dim);
+  border:1px solid var(--line-soft);border-radius:8px;
+  padding:8px 14px;background:rgba(9,17,29,.42);transition:.25s;
+}
+.course-cloud li:hover{border-color:rgba(79,216,255,.3);color:var(--cyan-soft);}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.foot{
+  border-top:1px solid var(--line-soft);
+  background:linear-gradient(to bottom,var(--bg-2),var(--bg));
+  padding:clamp(56px,7vw,88px) 0 34px;
+}
+.foot-grid{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:clamp(28px,4vw,60px);
+  padding-bottom:44px;border-bottom:1px solid var(--line-soft);
+}
+.foot h4{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;
+  color:var(--ink-mute);text-transform:uppercase;font-weight:400;margin-bottom:20px;
+}
+.foot .about{color:var(--ink-dim);font-size:14.2px;max-width:44ch;margin-top:20px;}
+.foot-list li{margin-bottom:12px;}
+.foot-list a,.foot-list span{
+  font-size:14px;color:var(--ink-dim);transition:.22s;
+  display:inline-flex;align-items:center;gap:9px;
+}
+.foot-list a:hover{color:var(--cyan);}
+.foot-list svg{width:14px;height:14px;color:var(--cyan-deep);flex:0 0 auto;}
+.foot-bottom{
+  display:flex;justify-content:space-between;align-items:center;gap:18px;
+  flex-wrap:wrap;padding-top:26px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--ink-mute);
+}
+
+/* ============================================================
+   REVEAL
+   ============================================================ */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .8s cubic-bezier(.2,.7,.3,1),transform .8s cubic-bezier(.2,.7,.3,1);}
+.reveal.in{opacity:1;transform:none;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1080px){
+  .cards.c3{grid-template-columns:repeat(2,1fr);}
+  .foot-grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:900px){
+  .deck{height:440px;}
+}
+@media (max-width:860px){
+  .nav-links{
+    position:fixed;inset:70px 0 auto 0;
+    flex-direction:column;align-items:stretch;gap:2px;
+    background:rgba(4,7,13,.97);backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--line);
+    padding:14px var(--pad-x) 24px;
+    transform:translateY(calc(-100% - 71px));
+    transition:transform .38s cubic-bezier(.2,.7,.3,1);
+  }
+  .nav.open .nav-links{transform:none;}
+  .nav-links a{padding:14px 12px;font-size:13px;}
+  .nav-cta{display:none;}
+  .burger{display:grid;}
+  .metrics-in{grid-template-columns:repeat(2,1fr);gap:26px 18px;}
+  .cards.c3,.cards.c2{grid-template-columns:1fr;}
+  .entry-top{flex-direction:column;gap:14px;}
+  .award{flex-wrap:wrap;gap:14px;}
+  .award .lvl{margin-left:auto;}
+}
+@media (max-width:560px){
+  body{font-size:15.4px;}
+  .hero{min-height:auto;padding:104px 0 84px;}
+  .hero h1{letter-spacing:.04em;}
+  .hero-actions .btn{flex:1 1 100%;justify-content:center;}
+  .foot-grid{grid-template-columns:1fr;}
+  .award .yr{min-width:0;}
+  .award .lvl{margin-left:0;}
+  .entry .date{align-self:flex-start;}
+  .deck{height:480px;}
+  .deck-ctrl{gap:14px;}
+  .gate-form{flex-direction:column;}
+  .gate-form .btn{justify-content:center;}
+  .fld-row{grid-template-columns:1fr;}
+  .hero-id-row{gap:14px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+  html{scroll-behavior:auto;}
+  .reveal{opacity:1;transform:none;}
+}
+</style>
+</head>
+<body class="locked">
+
+<noscript><style>
+  /* 无 JS 时保证内容全部可见、计数显示真实值；门禁无法校验则放行 */
+  .reveal{opacity:1 !important;transform:none !important;}
+  #gate{display:none !important;}
+  body.locked{overflow:auto !important;}
+</style></noscript>
+
+<!-- ================= GATE · 访问验证 ================= -->
+<div id="gate" role="dialog" aria-modal="true" aria-label="访问验证">
+  <div class="gate-panel" id="gatePanel">
+    <div class="gate-tag"><span>RESTRICTED · PRIVATE</span><i aria-hidden="true"></i></div>
+    <img class="gate-logo" src="gate-logo.png" alt="SYHQ" width="168">
+    <h1>访问验证</h1>
+    <p class="gate-sub">这是匡烨的私人档案页。请输入访问密钥继续 —— 或通过简历上的 NFC 贴纸「碰一碰」直接进入。</p>
+    <form class="gate-form" id="gateForm">
+      <input type="password" id="gatePass" placeholder="输入访问密钥" autocomplete="current-password" aria-label="访问密钥">
+      <button class="btn btn-primary" type="submit">解锁</button>
+    </form>
+    <label class="gate-remember"><input type="checkbox" id="gateRemember">7 天内免输入</label>
+    <p class="gate-err mono" id="gateErr" role="alert"></p>
+    <div class="gate-foot"><span>SECURE CHANNEL</span><span id="gateAttempts">ATTEMPTS · 0</span></div>
+  </div>
+</div>
+
+<!-- ================= ADMIN · 内容管理抽屉 ================= -->
+<div class="admin" id="admin" aria-hidden="true">
+  <div class="admin-mask" data-admin-close></div>
+  <aside class="admin-panel" role="dialog" aria-label="分享内容管理">
+    <div class="admin-head">
+      <div>
+        <b>分享内容管理</b>
+        <span class="mono">SHARES CONSOLE · LOCAL</span>
+      </div>
+      <button class="admin-x" type="button" data-admin-close aria-label="关闭">✕</button>
+    </div>
+    <div class="admin-body">
+      <div class="fld">
+        <label>标签 / Tag</label>
+        <input id="fTag" maxlength="12" placeholder="如：项目 / 动态 / 作品">
+      </div>
+      <div class="fld-row">
+        <div class="fld">
+          <label>日期 / Date</label>
+          <input id="fDate" maxlength="10" placeholder="2026.09">
+        </div>
+        <div class="fld">
+          <label>链接 / Link（可选）</label>
+          <input id="fLink" placeholder="https://">
+        </div>
+      </div>
+      <div class="fld">
+        <label>标题 / Title</label>
+        <input id="fTitle" maxlength="40" placeholder="分享标题">
+      </div>
+      <div class="fld">
+        <label>正文 / Body</label>
+        <textarea id="fDesc" maxlength="300" placeholder="分享内容描述…"></textarea>
+      </div>
+      <div class="admin-foot" style="padding:0;border:0;">
+        <button class="btn btn-primary" id="fSave" type="button">保存新卡片</button>
+        <button class="btn btn-ghost" id="fReset" type="button">重置表单</button>
+      </div>
+      <div class="admin-lb">已发布卡片</div>
+      <div class="admin-list" id="adminList"><!-- JS 渲染 --></div>
+    </div>
+    <div class="admin-foot">
+      <button class="btn btn-ghost" id="aExport" type="button">导出 JSON</button>
+      <button class="btn btn-ghost" id="aImport" type="button">导入 JSON</button>
+      <button class="btn btn-danger" id="aDefaults" type="button">恢复默认</button>
+      <input type="file" id="aImportFile" accept=".json,application/json" hidden>
+    </div>
+  </aside>
+</div>
+
+<!-- ================= NAV ================= -->
+<header class="nav" id="nav">
+  <div class="nav-in">
+    <a class="brand" href="#top" aria-label="回到顶部">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 1.6l8.9 5.2v10.4L12 22.4 3.1 17.2V6.8L12 1.6z" stroke="#4fd8ff" stroke-width="1.1"/>
+        <path d="M12 7.1l4.6 2.7v5.3L12 17.8l-4.6-2.7V9.8L12 7.1z" fill="rgba(79,216,255,.22)" stroke="#4fd8ff" stroke-width="1"/>
+      </svg>
+      <b>匡烨</b><span>Kuang Ye</span>
+    </a>
+    <nav class="nav-links" id="navlinks" aria-label="主导航">
+      <a href="#matrix">能力矩阵</a>
+      <a href="#archive">项目档案</a>
+      <a href="#honor">荣誉认证</a>
+      <a href="#shares">分享动态</a>
+    </nav>
+    <a class="nav-cta" href="匡烨-简历.pdf" target="_blank" rel="noopener">打开完整简历</a>
+    <button class="burger" id="burger" aria-label="展开菜单" aria-expanded="false" aria-controls="navlinks">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <canvas id="stars" aria-hidden="true"></canvas>
+
+  <video class="hero-video" id="heroVideo"
+         muted loop playsinline autoplay preload="auto" aria-hidden="true">
+    <source src="hero-loop.mp4" type="video/mp4">
+  </video>
+
+  <div class="hero-seam" aria-hidden="true"></div>
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="hero-scan" aria-hidden="true"></div>
+  <div class="hero-sweep" aria-hidden="true"></div>
+  <div class="hero-fade" aria-hidden="true"></div>
+
+  <div class="hero-in">
+    <div class="hero-copy">
+      <div class="hero-id-row">
+        <span class="id-badge">
+          <span class="clip" aria-hidden="true"></span>
+          <img src="photo.jpg" alt="匡烨个人照片" width="156" height="156">
+          <i class="id-dot" aria-hidden="true"></i>
+        </span>
+        <span class="hero-status"><i class="dot"></i>Candidate Profile · Online</span>
+      </div>
+
+      <h1>匡<span class="ye">烨</span></h1>
+      <div class="hero-en mono">Kuang Ye</div>
+
+      <p class="hero-role">
+        求职意向：AI 应用工程师 <em>/</em> 嵌入式工程师 <em>/</em> 光电系统工程师
+      </p>
+
+      <div class="hero-edu">
+        <span>长春理工大学 · 光电工程学院</span>
+        <span class="sep">/</span>
+        <span>信息对抗技术</span>
+        <span class="sep">/</span>
+        <span>本科 · 大四在读</span>
+      </div>
+
+      <p class="hero-desc">
+        从原理图到样机，从 Agent 工作流到光电仿真 —— 擅长把 AI 工具链嵌进真实工程流程，
+        以可落地、可复用、可迭代的方式交付硬件与软件系统。
+      </p>
+
+      <div class="chips">
+        <span class="chip">电话 18942478421（同微信）</span>
+        <span class="chip">2023001085@mails.cust.edu.cn</span>
+        <span class="chip">籍贯 广东佛山</span>
+      </div>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="匡烨-简历.pdf" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <path d="M14 2v6h6M9 13h6M9 17h4"/>
+          </svg>
+          打开完整简历
+        </a>
+        <a class="btn btn-ghost" href="#archive">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h10"/>
+          </svg>
+          查看项目档案
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-cue" aria-hidden="true"><i></i>Scroll</div>
+</section>
+
+<!-- ================= METRICS ================= -->
+<section class="metrics" aria-label="关键数据">
+  <div class="metrics-in">
+    <div class="metric reveal"><span class="n" data-count="8">8</span><span class="l">工程软件 / Tools</span></div>
+    <div class="metric reveal" style="--d:.08s"><span class="n" data-count="4">4</span><span class="l">项目档案 / Projects</span></div>
+    <div class="metric reveal" style="--d:.16s"><span class="n" data-count="5">5</span><span class="l">竞赛奖项 / Awards</span></div>
+    <div class="metric reveal" style="--d:.24s"><span class="n" data-count="50">50<small>%</small></span><span class="l">平均节省工时 / Saved</span></div>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section class="sec" id="matrix">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Capability Matrix</span>
+      <h2 class="sec-title">能力矩阵<span class="en">Features — Skill Stack</span></h2>
+      <p class="sec-sub">覆盖嵌入式开发、光学仿真、PCB 设计与机械建模全链路，并可把 AI 工具链工程化地嵌入日常研发流程。</p>
+    </div>
+
+    <div class="cards c3">
+      <article class="card reveal">
+        <span class="idx">01 / TOOLING</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9zM3 9h2M3 15h2M19 9h2M19 15h2M9 3v2M15 3v2M9 19v2M15 19v2"/></svg></div>
+        <h3>工程软件</h3>
+        <p>Keil u5、SolidWorks、嘉立创 EDA、Proteus、LabVIEW、NI Multisim、Zemax、AutoCAD，覆盖嵌入式开发、光学仿真、PCB 设计与机械建模全链路。</p>
+        <div class="tags"><span>Keil u5</span><span>SolidWorks</span><span>嘉立创 EDA</span><span>Proteus</span><span>LabVIEW</span><span>Multisim</span><span>Zemax</span><span>AutoCAD</span></div>
+      </article>
+
+      <article class="card reveal" style="--d:.07s">
+        <span class="idx">02 / AI OPS</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div>
+        <h3>AI 与编程</h3>
+        <p>系统掌握 Claude Code、Codex、Kimi Code 等主流 AI Agent；具备 Python / C / C++ 编程能力，能将 AI 工具用于代码生成、可视化流程、项目部署与文档自动化。</p>
+        <div class="tags"><span>Claude Code</span><span>Codex</span><span>Kimi Code</span><span>Python</span><span>C / C++</span><span>Shell</span></div>
+      </article>
+
+      <article class="card reveal" style="--d:.14s">
+        <span class="idx">03 / HARDWARE</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></svg></div>
+        <h3>嵌入式硬件</h3>
+        <p>熟悉 STM32 等 MCU 全流程开发，掌握电路设计、传感器接入、电机驱动调试；具备从原理图 → PCB → 样机的完整落地能力；熟悉 YOLO 系列视觉模型的开发与部署应用，可将目标检测能力嵌入嵌入式设备实现边缘视觉感知。</p>
+        <div class="tags"><span>STM32</span><span>原理图 → PCB → 样机</span><span>传感器接入</span><span>电机驱动</span><span>YOLO 边缘部署</span></div>
+      </article>
+
+      <article class="card reveal">
+        <span class="idx">04 / MEDIA</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5l6 3v8l-6 3-6-3-6 3V11l6-3 6-3z"/><circle cx="12" cy="11" r="3"/></svg></div>
+        <h3>内容与视觉</h3>
+        <p>熟练视频剪辑与摄影（视觉中国签约独立摄影师供稿人）；可独立完成产品 Demo、宣传物料与技术文档配图。</p>
+        <div class="tags"><span>视频剪辑</span><span>摄影</span><span>视觉中国签约</span><span>技术文档配图</span></div>
+      </article>
+
+      <article class="card reveal" style="--d:.07s">
+        <span class="idx">05 / COMMS</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/></svg></div>
+        <h3>语言能力</h3>
+        <p>英语、粤语沟通流利；具备良好的跨团队沟通、技术写作与文档沉淀能力。</p>
+        <div class="tags"><span>英语</span><span>粤语</span><span>技术写作</span><span>文档沉淀</span></div>
+      </article>
+
+      <article class="card reveal" style="--d:.14s">
+        <span class="idx">06 / ACADEMIC</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4l9 5-9 5-9-5 9-5z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/></svg></div>
+        <h3>学业表现</h3>
+        <p>专业课成绩良好，专业排名前列；多次获校级奖学金及省级以上学科竞赛奖项，多门课设获评「优秀课设」。</p>
+        <div class="tags"><span>专业排名前列</span><span>校级奖学金</span><span>优秀课设</span></div>
+      </article>
+    </div>
+
+    <div class="course-cloud reveal">
+      <div class="lb">Curriculum · 主干课程</div>
+      <ul>
+        <li>电子技术</li><li>应用光学</li><li>信号与系统</li><li>通信原理</li>
+        <li>嵌入式设计</li><li>光学设计</li><li>电子对抗技术</li>
+        <li>光电对抗技术</li><li>光电检测技术</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ARCHIVE ================= -->
+<section class="sec" id="archive" style="background:var(--bg-2);border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Project Archive</span>
+      <h2 class="sec-title">项目档案<span class="en">Verified Outcomes</span></h2>
+      <p class="sec-sub">一段在研实习 + 四个已落地项目。每一条都写清了职责边界、技术路径与可验证的结果。</p>
+    </div>
+
+    <article class="entry flag reveal">
+      <div class="entry-top">
+        <div>
+          <span class="badge">Internship · 在研</span>
+          <h3>长春捷翼汽车科技股份有限公司</h3>
+          <span class="role">工程师助理 · 新能源电子硬件与整车线束测试开发</span>
+        </div>
+        <span class="date mono">2026.09 – 至今</span>
+      </div>
+      <ul class="entry-body">
+        <li>于实验室开展新能源汽车电子硬件与整车线束的测试与开发工作，覆盖环境检测、耐久检测、高低压检测等测试类别；独立完成测试执行、数据记录与检测报告出具，并按项目要求设计、迭代检测流程。</li>
+        <li>熟悉项目运行与管理流程，配合项目工程师推进功能开发：参与测试方案对齐与问题定位，跟进测试节点与交付进度，将测试结论反馈至开发侧形成闭环。</li>
+        <li>熟练操作 Word / Excel / PPT 等办公软件完成测试记录、报告与数据整理，并将 AI 工具引入日常测试与文档工作，用于数据处理、流程梳理与效率提升，持续沉淀可复用的工作方法。</li>
+      </ul>
+    </article>
+
+    <article class="entry reveal">
+      <div class="entry-top">
+        <div>
+          <span class="badge">Competition</span>
+          <h3>第十四届全国大学生光电设计大赛（创意组）</h3>
+          <span class="role">项目负责人 · 《"逐日"海上光伏双轴追踪系统》</span>
+        </div>
+        <span class="date mono">2026.03 – 2026.06</span>
+      </div>
+      <ul class="entry-body">
+        <li>统筹参赛项目全流程：针对海上光伏固定安装效率损失与现有追踪设备环境适应性不足等痛点，组织市场调研、技术演进与竞品对比，从中提炼差异化定位，提出基于 LiTaO₃ 热释电效应的双轴闭环追踪方案构想。</li>
+        <li>主导完成方案可行性论证：从宽光谱响应（300–2500nm，覆盖约 96% 太阳辐射）、毫秒级响应、无源被动结构与 IP68 海洋适应性等维度论证方案相对进口热释电设备与国产光电式方案的代际优势，形成核心技术指标体系并完成方案设计书撰写。</li>
+      </ul>
+    </article>
+
+    <article class="entry reveal">
+      <div class="entry-top">
+        <div>
+          <span class="badge">Course Design · 开源</span>
+          <h3>嵌入式系统综合课设 · 多功能电子琴</h3>
+          <span class="role">独立完成 · GitHub 已开源 · 获评「优秀课设」</span>
+        </div>
+        <span class="date mono">2025.09 – 2025.12</span>
+      </div>
+      <ul class="entry-body">
+        <li>独立设计并实现基于 STM32 的多功能电子琴：以 PWM 输出驱动无源蜂鸣器发声，自主设计 RC 低通滤波电路将 PWM 方波平滑为模拟音频，并反复调试 PWM 频率与占空比校准十二平均律各音阶，最终完成实物演奏验证。</li>
+        <li>完成贴片元件手工焊接，使用示波器实测 PWM 波形失真并迭代滤波电容参数以优化音质，全程撰写硬件调试日志记录参数迭代过程；代码、原理图与调试日志沉淀至 GitHub。</li>
+      </ul>
+    </article>
+
+    <article class="entry reveal">
+      <div class="entry-top">
+        <div>
+          <span class="badge">Personal · Ongoing</span>
+          <h3>AI Agent 工程工作流实践</h3>
+          <span class="role">个人项目集 · 端到端工作流模板</span>
+        </div>
+        <span class="date mono">2024.06 – 至今</span>
+      </div>
+      <ul class="entry-body">
+        <li>系统掌握 Claude Code、Codex、Kimi Code 等主流 AI Agent，覆盖代码生成、Bug 定位、文档撰写与报告整理等高频场景，搭建可视化端到端工作流模板，结合 Python/Shell 脚本实现文档解析、批量处理与一键部署。</li>
+        <li>探索 Agent 与嵌入式/光电项目的结合：自动生成 STM32 外设初始化代码、辅助撰写 Zemax/LabVIEW 仿真与数据处理脚本，课程材料与比赛准备平均节省约 50% 工时。</li>
+      </ul>
+    </article>
+
+    <article class="entry reveal">
+      <div class="entry-top">
+        <div>
+          <span class="badge">Robotics</span>
+          <h3>RoboMaster 机甲设计</h3>
+          <span class="role">机械与电控协同设计成员 · 校园战队</span>
+        </div>
+        <span class="date mono">2024.03 – 2024.06</span>
+      </div>
+      <ul class="entry-body">
+        <li>主要负责战队步兵/英雄机器人机械与电控协同设计，专注底盘与云台结构件的三维建模、关键零部件选型与多轮轻量化迭代，基于 SolidWorks 完成多版装配方案并通过校内评审。</li>
+        <li>与嵌入式组协作完成机械-电控接口对齐与走线规划，跟进样机装配与现场调试，沉淀出可复用、便于后续赛季快速迭代的机甲底盘与云台结构件方案。</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ================= RECOGNITION ================= -->
+<section class="sec" id="honor">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Recognition</span>
+      <h2 class="sec-title">荣誉认证<span class="en">Awards &amp; Verification</span></h2>
+      <p class="sec-sub">全部为可查证的竞赛与学业记录，未做任何夸大表述。</p>
+    </div>
+
+    <div class="award reveal">
+      <span class="yr mono">2025</span>
+      <div class="txt"><b>大学生数学建模竞赛</b><span>吉林赛区一等奖</span></div>
+      <span class="lvl">一等奖</span>
+    </div>
+    <div class="award reveal" style="--d:.06s">
+      <span class="yr mono">2024</span>
+      <div class="txt"><b>校级数学建模竞赛</b><span>多次获得一等奖</span></div>
+      <span class="lvl">一等奖</span>
+    </div>
+    <div class="award reveal" style="--d:.12s">
+      <span class="yr mono">2024</span>
+      <div class="txt"><b>大学生创新创业竞赛</b><span>校级二等奖</span></div>
+      <span class="lvl">二等奖</span>
+    </div>
+    <div class="award reveal" style="--d:.18s">
+      <span class="yr mono">2023</span>
+      <div class="txt"><b>校级奖学金</b><span>二等奖学金</span></div>
+      <span class="lvl">奖学金</span>
+    </div>
+    <div class="award plain reveal" style="--d:.24s">
+      <span class="yr mono">2026</span>
+      <div class="txt"><b>在校期间应用光学课设、嵌入式课设、光电综合课设多次获评「优秀课设」，嵌入式核心项目已上传 GitHub。</b></div>
+      <span class="lvl">课设认证</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SHARES · 分享动态 ================= -->
+<section class="sec" id="shares" style="background:var(--bg-2);border-top:1px solid var(--line-soft);">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Live Feed</span>
+      <h2 class="sec-title">分享动态<span class="en">Moments · Updates</span></h2>
+      <p class="sec-sub">持续更新的个人动态流——项目进展、比赛结果与作品分享。内容支持随时在后台编辑。</p>
+    </div>
+
+    <div class="deck reveal" id="deck" aria-live="polite"><!-- JS 渲染卡片 --></div>
+    <div class="deck-ctrl reveal">
+      <button class="deck-btn" id="deckPrev" type="button" aria-label="上一张">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="deck-count mono" id="deckCount"><b>01</b> / 01</span>
+      <button class="deck-btn" id="deckNext" type="button" aria-label="下一张">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <p class="deck-hint mono reveal">Click Card · Tap To Next</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="#top" aria-label="回到顶部">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" style="width:26px;height:26px">
+            <path d="M12 1.6l8.9 5.2v10.4L12 22.4 3.1 17.2V6.8L12 1.6z" stroke="#4fd8ff" stroke-width="1.1"/>
+            <path d="M12 7.1l4.6 2.7v5.3L12 17.8l-4.6-2.7V9.8L12 7.1z" fill="rgba(79,216,255,.22)" stroke="#4fd8ff" stroke-width="1"/>
+          </svg>
+          <b>匡烨</b><span>Kuang Ye</span>
+        </a>
+        <p class="about">
+          长春理工大学 · 光电工程学院 · 信息对抗技术（本科 · 大四在读）。
+          聚焦嵌入式硬件与 AI 应用工程，偏好可落地、可复用、可迭代的工程交付方式。
+        </p>
+      </div>
+
+      <div>
+        <h4>联系方式 · Contact</h4>
+        <ul class="foot-list">
+          <li><a href="tel:18942478421">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 006 6L16 14l5 2v4a1 1 0 01-1.1 1A17 17 0 014 5.1 1 1 0 015 4z"/></svg>
+            18942478421（同微信）</a></li>
+          <li><a href="mailto:2023001085@mails.cust.edu.cn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+            2023001085@mails.cust.edu.cn</a></li>
+          <li><span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+            籍贯 · 广东佛山</span></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>快速跳转 · Index</h4>
+        <ul class="foot-list">
+          <li><a href="#matrix">能力矩阵</a></li>
+          <li><a href="#archive">项目档案</a></li>
+          <li><a href="#honor">荣誉认证</a></li>
+          <li><a href="#shares">分享动态</a></li>
+          <li><a href="匡烨-简历.pdf" target="_blank" rel="noopener">下载简历 PDF</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="foot-bottom">
+      <span>© 2026 匡烨 KUANG YE · ALL RIGHTS RESERVED</span>
+      <span style="display:flex;align-items:center;gap:14px;">
+        <span>BUILT WITH AI-ASSISTED WORKFLOW</span>
+        <button class="admin-link" id="adminBtn" type="button" title="内容管理">ADMIN</button>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- 1. 视频：就绪后淡入；失败则静默回退到 Canvas 背景 ---------- */
+  var video = document.getElementById("heroVideo");
+  if (video) {
+    var ok = false;
+    var reveal = function(){ ok = true; video.classList.add("ready"); };
+    video.addEventListener("loadeddata", reveal, { once:true });
+    var tryPlay = function(){
+      var p = video.play();
+      if (p && p.catch) { p.catch(function(){ /* 自动播放被拦截：保留 Canvas 背景 */ }); }
+    };
+    video.addEventListener("error", function(){ video.style.display = "none"; });
+    if (video.readyState >= 2) { reveal(); }
+    else { tryPlay(); }
+    document.addEventListener("visibilitychange", function(){
+      if (document.hidden) { video.pause(); }
+      else if (ok) { tryPlay(); }
+    });
+    if (reduce) { video.pause(); video.removeAttribute("autoplay"); }
+  }
+
+  /* ---------- 2. 星空 / 数据流 Canvas（始终存在，兼作视频兜底） ---------- */
+  var cv = document.getElementById("stars");
+  if (cv && cv.getContext) {
+    var ctx = cv.getContext("2d");
+    var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var stars = [], streaks = [], mx = 0, my = 0, tx = 0, ty = 0;
+
+    function build(){
+      W = cv.clientWidth; H = cv.clientHeight;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var n = Math.min(190, Math.round(W * H / 12000));
+      stars = [];
+      for (var i = 0; i < n; i++) {
+        stars.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * 1.5 + .3,
+          a: Math.random() * .55 + .12,
+          s: Math.random() * .22 + .05,
+          z: Math.random() * .8 + .2
+        });
+      }
+      streaks = [];
+      for (var j = 0; j < 5; j++) {
+        streaks.push({ x: Math.random() * W, y: Math.random() * H, len: Math.random() * 90 + 60, v: Math.random() * .7 + .35, a: Math.random() * .3 + .1 });
+      }
+    }
+
+    function frame(){
+      ctx.clearRect(0, 0, W, H);
+      tx += (mx - tx) * .045; ty += (my - ty) * .045;
+
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        s.y -= s.s;
+        if (s.y < -2) { s.y = H + 2; s.x = Math.random() * W; }
+        var px = s.x + tx * 26 * s.z, py = s.y + ty * 16 * s.z;
+        ctx.beginPath();
+        ctx.arc(px, py, s.r, 0, 6.2832);
+        ctx.fillStyle = "rgba(150,225,255," + s.a + ")";
+        ctx.fill();
+      }
+      for (var k = 0; k < streaks.length; k++) {
+        var t = streaks[k];
+        t.y += t.v;
+        if (t.y - t.len > H) { t.y = -t.len; t.x = Math.random() * W; }
+        var g = ctx.createLinearGradient(t.x, t.y - t.len, t.x, t.y);
+        g.addColorStop(0, "rgba(79,216,255,0)");
+        g.addColorStop(1, "rgba(79,216,255," + t.a + ")");
+        ctx.strokeStyle = g; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(t.x, t.y - t.len); ctx.lineTo(t.x, t.y); ctx.stroke();
+      }
+      raf = requestAnimationFrame(frame);
+    }
+
+    var raf = 0;
+    build();
+    if (reduce) { frame(); cancelAnimationFrame(raf); }
+    else { frame(); }
+    window.addEventListener("resize", function(){ build(); }, { passive:true });
+    window.addEventListener("pointermove", function(e){
+      mx = (e.clientX / window.innerWidth - .5) * 2;
+      my = (e.clientY / window.innerHeight - .5) * 2;
+    }, { passive:true });
+  }
+
+  /* ---------- 3. 滚动：导航态 + 区块高亮 ---------- */
+  var nav = document.getElementById("nav");
+  var links = [].slice.call(document.querySelectorAll(".nav-links a"));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute("href")); });
+
+  function onScroll(){
+    if (window.scrollY > 40) { nav.classList.add("solid"); } else { nav.classList.remove("solid"); }
+    var y = window.scrollY + window.innerHeight * .32, idx = -1;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].offsetTop <= y) { idx = i; }
+    }
+    links.forEach(function(a, i){ a.classList.toggle("active", i === idx); });
+  }
+  window.addEventListener("scroll", onScroll, { passive:true });
+  onScroll();
+
+  /* ---------- 4. 移动端菜单 ---------- */
+  var burger = document.getElementById("burger");
+  if (burger) {
+    burger.addEventListener("click", function(){
+      var open = nav.classList.toggle("open");
+      burger.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    links.forEach(function(a){ a.addEventListener("click", function(){
+      nav.classList.remove("open"); burger.setAttribute("aria-expanded", "false");
+    }); });
+  }
+
+  /* ---------- 5. 入场动画 ---------- */
+  var reveals = [].slice.call(document.querySelectorAll(".reveal"));
+  reveals.forEach(function(el){
+    var d = el.style.getPropertyValue("--d");
+    if (d) { el.style.transitionDelay = d; }
+  });
+  if ("IntersectionObserver" in window && !reduce) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold:.14, rootMargin:"0px 0px -8% 0px" });
+    reveals.forEach(function(el){ io.observe(el); });
+  } else {
+    reveals.forEach(function(el){ el.classList.add("in"); });
+  }
+
+  /* ---------- 6. 数字滚动 ---------- */
+  var nums = [].slice.call(document.querySelectorAll("[data-count]"));
+  // HTML 里写的是真实数值（无 JS 也正确）；有 JS 时先归零，再做滚动动画
+  nums.forEach(function(n){
+    var s = n.querySelector("small");
+    n.innerHTML = "0" + (s ? s.outerHTML : "");
+  });
+  function run(el){
+    var target = parseInt(el.getAttribute("data-count"), 10) || 0;
+    var suffix = el.querySelector("small") ? el.querySelector("small").outerHTML : "";
+    var t0 = null, dur = 1400;
+    function step(ts){
+      if (!t0) { t0 = ts; }
+      var p = Math.min((ts - t0) / dur, 1);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.innerHTML = Math.round(target * e) + suffix;
+      if (p < 1) { requestAnimationFrame(step); }
+    }
+    requestAnimationFrame(step);
+  }
+  if ("IntersectionObserver" in window && !reduce) {
+    var io2 = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) {
+          var n = en.target.querySelector("[data-count]");
+          if (n) { run(n); }
+          io2.unobserve(en.target);
+        }
+      });
+    }, { threshold:.5 });
+    nums.forEach(function(n){ io2.observe(n.parentElement || n); });
+  } else {
+    nums.forEach(function(n){
+      var t = n.getAttribute("data-count");
+      var s = n.querySelector("small");
+      n.innerHTML = t + (s ? s.outerHTML : "");
+    });
+  }
+
+  /* ---------- 7. 卡片光晕跟随 ---------- */
+  [].slice.call(document.querySelectorAll(".card")).forEach(function(c){
+    c.addEventListener("pointermove", function(e){
+      var r = c.getBoundingClientRect();
+      c.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100) + "%");
+      c.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100) + "%");
+    }, { passive:true });
+  });
+
+  /* ---------- 8. 访问门禁 ---------- */
+  var GATE_HASH = "1b13dc8b8706896baa35edbdefde152ee99ec59f93999b0e48f93057f030775c"; // 访问密钥哈希（勿在源码存储明文）
+  var GATE_FB   = "7c8c172a";                                                          // djb2 兜底（无 SubtleCrypto 环境）
+  var gate = document.getElementById("gate");
+  var gatePanel = document.getElementById("gatePanel");
+  var gateForm = document.getElementById("gateForm");
+  var gatePass = document.getElementById("gatePass");
+  var gateErr = document.getElementById("gateErr");
+  var gateRemember = document.getElementById("gateRemember");
+  var gateAttempts = document.getElementById("gateAttempts");
+  var AUTH_S = "ky_auth", AUTH_L = "ky_auth_until";
+  var attempts = 0;
+
+  function gateStorageOk(){ try { window.sessionStorage.setItem("__t","1"); window.sessionStorage.removeItem("__t"); return true; } catch(e){ return false; } }
+  function isAuthed(){
+    try {
+      if (sessionStorage.getItem(AUTH_S) === "1") return true;
+      var u = parseInt(localStorage.getItem(AUTH_L) || "0", 10);
+      return !!u && Date.now() < u;
+    } catch(e){ return false; }
+  }
+  function unlock(persist){
+    gate.classList.add("open");
+    document.body.classList.remove("locked");
+    try {
+      sessionStorage.setItem(AUTH_S, "1");
+      if (persist) { localStorage.setItem(AUTH_L, String(Date.now() + 7 * 864e5)); }
+    } catch(e){}
+  }
+  function sha256hex(s){
+    if (window.crypto && crypto.subtle && window.isSecureContext) {
+      try {
+        return crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)).then(function(buf){
+          return [].map.call(new Uint8Array(buf), function(b){ return ("0" + b.toString(16)).slice(-2); }).join("");
+        });
+      } catch(e){ /* 落到 djb2 */ }
+    }
+    return Promise.resolve(djb2Hash(s));
+  }
+  function djb2Hash(s){
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; }
+    return h.toString(16);
+  }
+
+  if (isAuthed()) {
+    gate.classList.add("open");
+    document.body.classList.remove("locked");
+  } else {
+    setTimeout(function(){ try { gatePass.focus(); } catch(e){} }, 350);
+  }
+  if (gateForm) {
+    gateForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      var v = gatePass.value;
+      if (!v) { return; }
+      sha256hex(v).then(function(h){
+        // SubtleCrypto 可用时 h 为 64 位 SHA-256；不可用时降级为 djb2 短哈希
+        var ok = (h === GATE_HASH) || (h === GATE_FB);
+        if (ok) {
+          gateErr.textContent = "";
+          unlock(gateRemember.checked);
+          gatePass.value = "";
+        } else {
+          attempts++;
+          gateAttempts.textContent = "ATTEMPTS · " + attempts;
+          gateErr.textContent = "密钥错误 · 请重试（Attempt " + attempts + "）";
+          gatePanel.classList.remove("shake");
+          void gatePanel.offsetWidth;
+          gatePanel.classList.add("shake");
+          gatePass.select();
+        }
+      });
+    });
+  }
+
+  /* ---------- 9. 分享动态：卡片堆叠 ---------- */
+  var LS_KEY = "ky_shares_v1";
+  var DEFAULT_SHARES = [
+    { tag:"动态", date:"2026.09", title:"个人主页 2.0 上线", link:"", linkText:"",
+      desc:"你正在看的这一页，就是简历上 NFC 贴纸「碰一碰」的落点——项目进展、比赛结果与分享动态都会持续同步到这里。" },
+    { tag:"实习", date:"2026.09", title:"捷翼汽车 · 实验室测试与开发", link:"", linkText:"",
+      desc:"新能源汽车电子硬件与整车线束测试进行中：环境 / 耐久 / 高低压检测，检测报告出具与检测流程设计验证。" },
+    { tag:"竞赛", date:"2026.06", title:"光电设计大赛 · 校级二等奖", link:"", linkText:"",
+      desc:"创意组《「逐日」海上光伏双轴追踪系统》——项目负责人，完成方案可行性论证与设计书撰写。" },
+    { tag:"项目", date:"2025.12", title:"STM32 多功能电子琴 · GitHub 开源", link:"https://github.com/EasonQuantico", linkText:"GitHub ↗",
+      desc:"PWM 音频 + RC 滤波 + 十二平均律校准，获评「优秀课设」；代码、原理图与调试日志已全部开源。" },
+    { tag:"作品", date:"2026.08", title:"摄影作品集 · 视觉中国签约", link:"", linkText:"",
+      desc:"持续更新的摄影作品集，精选图片经视觉中国供稿发布。产品 Demo、宣传物料与技术文档配图均可独立完成。" }
+  ];
+  var deckEl = document.getElementById("deck");
+  var countEl = document.getElementById("deckCount");
+  var shares = loadShares();
+  var cur = 0, deckBusy = false;
+
+  function loadShares(){
+    try {
+      var s = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+      if (Array.isArray(s) && s.length) { return s; }
+    } catch(e){}
+    return JSON.parse(JSON.stringify(DEFAULT_SHARES));
+  }
+  function esc(s){
+    var d = document.createElement("div");
+    d.textContent = (s == null ? "" : String(s));
+    return d.innerHTML;
+  }
+  function cardLink(it){
+    if (!it.link) { return ""; }
+    return '<div class="share-link"><a href="' + esc(it.link) + '" target="_blank" rel="noopener">' +
+           esc(it.linkText || "查看链接") + '</a></div>';
+  }
+  function applyDeck(){
+    var cards = deckEl.querySelectorAll(".share-card");
+    var n = shares.length;
+    if (!n) { return; }
+    cur = ((cur % n) + n) % n;
+    for (var k = 0; k < cards.length; k++) {
+      var c = cards[k];
+      var rel = (parseInt(c.dataset.i, 10) - cur + n) % n;
+      c.classList.remove("on", "n1", "n2", "n3", "gone");
+      if (rel === 0) { c.classList.add("on"); }
+      else if (rel === 1) { c.classList.add("n1"); }
+      else if (rel === 2) { c.classList.add("n2"); }
+      else if (rel === 3) { c.classList.add("n3"); }
+    }
+    countEl.innerHTML = "<b>" + ("0" + (cur + 1)).slice(-2) + "</b> / " + ("0" + n).slice(-2);
+  }
+  function renderDeck(){
+    deckEl.innerHTML = "";
+    if (!shares.length) {
+      countEl.innerHTML = "<b>00</b> / 00";
+      deckEl.innerHTML = '<article class="share-card on"><span class="badge">暂无</span>' +
+        '<h3>还没有分享内容</h3><p>通过页脚 ADMIN 入口登录后台，发布第一条动态。</p></article>';
+      return;
+    }
+    shares.forEach(function(it, i){
+      var c = document.createElement("article");
+      c.className = "share-card";
+      c.dataset.i = i;
+      c.innerHTML = '<span class="badge">' + esc(it.tag || "动态") + '</span>' +
+        '<div class="share-meta"><span class="dt mono">' + esc(it.date || "") + '</span></div>' +
+        '<h3>' + esc(it.title || "") + '</h3>' +
+        '<p>' + esc(it.desc || "") + '</p>' + cardLink(it);
+      deckEl.appendChild(c);
+    });
+    applyDeck();
+  }
+  function deckNext(){
+    if (deckBusy || shares.length < 2) { return; }
+    deckBusy = true;
+    var top = deckEl.querySelector(".share-card.on");
+    if (top) { top.classList.add("gone"); }
+    setTimeout(function(){
+      cur = (cur + 1) % shares.length;
+      applyDeck();
+      deckBusy = false;
+    }, 360);
+  }
+  function deckPrev(){
+    if (deckBusy || shares.length < 2) { return; }
+    deckBusy = true;
+    cur = (cur - 1 + shares.length) % shares.length;
+    applyDeck();
+    setTimeout(function(){ deckBusy = false; }, 440);
+  }
+  deckEl.addEventListener("click", function(e){
+    if (e.target.closest("a")) { return; }
+    deckNext();
+  });
+  var bNext = document.getElementById("deckNext");
+  var bPrev = document.getElementById("deckPrev");
+  if (bNext) { bNext.addEventListener("click", deckNext); }
+  if (bPrev) { bPrev.addEventListener("click", deckPrev); }
+  renderDeck();
+
+  /* ---------- 10. 后台：分享内容管理 ---------- */
+  var admin = document.getElementById("admin");
+  var adminList = document.getElementById("adminList");
+  var fTag = document.getElementById("fTag"), fDate = document.getElementById("fDate");
+  var fTitle = document.getElementById("fTitle"), fDesc = document.getElementById("fDesc");
+  var fLink = document.getElementById("fLink");
+  var fSave = document.getElementById("fSave");
+  var editIdx = -1;
+
+  function persistShares(){ try { localStorage.setItem(LS_KEY, JSON.stringify(shares)); } catch(e){} }
+  function resetForm(){
+    editIdx = -1;
+    fTag.value = fDate.value = fTitle.value = fDesc.value = fLink.value = "";
+    fSave.textContent = "保存新卡片";
+  }
+  function fillForm(it, i){
+    editIdx = i;
+    fTag.value = it.tag || ""; fDate.value = it.date || "";
+    fTitle.value = it.title || ""; fDesc.value = it.desc || "";
+    fLink.value = it.link || "";
+    fSave.textContent = "保存修改（#" + (i + 1) + "）";
+    fTitle.focus();
+  }
+  function renderAdminList(){
+    adminList.innerHTML = "";
+    if (!shares.length) {
+      adminList.innerHTML = '<div class="admin-item"><div class="tt"><b>（空）</b><span>没有卡片</span></div></div>';
+      return;
+    }
+    shares.forEach(function(it, i){
+      var d = document.createElement("div");
+      d.className = "admin-item";
+      d.innerHTML = '<div class="tt"><b>' + esc(it.title || "(无标题)") + '</b>' +
+        '<span>' + esc(it.tag || "") + ' · ' + esc(it.date || "") + '</span></div>' +
+        '<button type="button" data-act="top" data-i="' + i + '" title="置顶显示">置顶</button>' +
+        '<button type="button" data-act="edit" data-i="' + i + '">编辑</button>' +
+        '<button type="button" class="del" data-act="del" data-i="' + i + '">删除</button>';
+      adminList.appendChild(d);
+    });
+  }
+  adminList.addEventListener("click", function(e){
+    var b = e.target.closest("button[data-act]");
+    if (!b) { return; }
+    var i = parseInt(b.dataset.i, 10), act = b.dataset.act;
+    if (act === "del") { shares.splice(i, 1); }
+    else if (act === "top" && i > 0) { shares.unshift(shares.splice(i, 1)[0]); cur = 0; }
+    else if (act === "edit") { fillForm(shares[i], i); renderAdminList(); return; }
+    persistShares();
+    renderAdminList();
+    renderDeck();
+  });
+  fSave.addEventListener("click", function(){
+    var title = fTitle.value.trim();
+    if (!title) { fTitle.focus(); fTitle.style.borderColor = "rgba(255,125,125,.6)"; return; }
+    fTitle.style.borderColor = "";
+    var obj = { tag: fTag.value.trim() || "动态", date: fDate.value.trim(), title: title,
+                desc: fDesc.value.trim(), link: fLink.value.trim(), linkText: fLink.value.trim() ? "查看链接" : "" };
+    if (editIdx >= 0) { shares[editIdx] = obj; } else { shares.unshift(obj); cur = 0; }
+    persistShares();
+    renderAdminList();
+    renderDeck();
+    resetForm();
+  });
+  document.getElementById("fReset").addEventListener("click", resetForm);
+  document.getElementById("aDefaults").addEventListener("click", function(){
+    if (window.confirm("确定恢复默认分享内容？当前修改将被覆盖。")) {
+      shares = JSON.parse(JSON.stringify(DEFAULT_SHARES));
+      cur = 0;
+      persistShares();
+      renderAdminList();
+      renderDeck();
+      resetForm();
+    }
+  });
+  document.getElementById("aExport").addEventListener("click", function(){
+    try {
+      var blob = new Blob([JSON.stringify(shares, null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "ky-shares.json";
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    } catch(e){}
+  });
+  var importBtn = document.getElementById("aImport");
+  var importFile = document.getElementById("aImportFile");
+  importBtn.addEventListener("click", function(){ importFile.click(); });
+  importFile.addEventListener("change", function(){
+    var f = importFile.files && importFile.files[0];
+    if (!f) { return; }
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var data = JSON.parse(r.result);
+        if (!Array.isArray(data)) { throw new Error("format"); }
+        data = data.filter(function(x){ return x && typeof x.title === "string"; });
+        if (!data.length) { throw new Error("empty"); }
+        shares = data;
+        cur = 0;
+        persistShares();
+        renderAdminList();
+        renderDeck();
+        resetForm();
+      } catch(err) { window.alert("导入失败：不是有效的分享数据 JSON。"); }
+    };
+    r.readAsText(f, "utf-8");
+    importFile.value = "";
+  });
+  var adminBtn = document.getElementById("adminBtn");
+  if (adminBtn) {
+    adminBtn.addEventListener("click", function(){
+      renderAdminList();
+      admin.classList.add("open");
+      admin.setAttribute("aria-hidden", "false");
+    });
+  }
+  [].slice.call(admin.querySelectorAll("[data-admin-close]")).forEach(function(el){
+    el.addEventListener("click", function(){
+      admin.classList.remove("open");
+      admin.setAttribute("aria-hidden", "true");
+      resetForm();
+    });
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && admin.classList.contains("open")) {
+      admin.classList.remove("open");
+      admin.setAttribute("aria-hidden", "true");
+      resetForm();
+    }
+  });
+})();
+</script>
+</body>
+</html>
