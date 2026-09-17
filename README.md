@@ -20,6 +20,7 @@
 | 项目档案 | 实习经历 + 嵌入式 / 光电 / AI 方向项目卡片 |
 | 荣誉认证 | 竞赛奖项与可查证成果 |
 | 分享动态 | 卡片堆叠交互（顶卡飞出 / 箭头翻页 / 计数指示），数据存云端，全站可见 |
+| 媒体上传 | 后台可为分享卡片配图片（≤6MB）或视频（≤24MB），以 data URI 存云端，访客端卡片内嵌渲染 |
 | 管理后台 | 页脚入口 → 独立密码验证 → 抽屉式控制台，支持新增 / 编辑 / 删除 / 置顶 / JSON 导入导出 |
 | 简历下载 | 页面内直接打开最新版 PDF 简历 |
 
@@ -48,12 +49,13 @@
 分享动态使用云端数据库表 `share_posts`：
 
 ```
-id BIGINT PK | tag | date | title | body | link | link_text | sort_order | created_at
+id BIGINT PK | tag | date | title | body | link | link_text | media_data | media_kind | sort_order | created_at
 ```
 
 - **RLS 策略**：匿名可读可写（SELECT/INSERT/UPDATE/DELETE 全放行），配合数据面 **Origin 强制校验**限制写入来源——仅应用注册域名可通过，GitHub Pages 等外部来源的请求会被拒绝
 - **前端数据流**：优先云端拉取 → 云端不可达时显示 `OFFLINE · 本地模式`，回退 localStorage / 内置默认数据；云端空表时自动播种默认内容
 - **写入路径**：管理后台的所有增删改直接写云端，刷新即全网可见
+- **媒体存储**：`media_data` 存完整 data URI（`data:image/*` 或 `data:video/*` 的 base64），`media_kind` 标记渲染方式。选择存库而非对象存储的原因：WorkBuddy Storage 仅对登录用户开放且无公开 URL，而分享媒体需要匿名可见；data URI 复用现有公开读通道，且 GitHub 镜像站也能加载。限制：图片 ≤6MB、视频 ≤24MB（前端校验），本地缓存超配额时自动剥离媒体重试
 
 ## 安全模型（如实说明）
 

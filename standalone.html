@@ -518,6 +518,18 @@ ul{margin:0;padding:0;list-style:none;}
   display:inline-flex;align-items:center;gap:9px;
 }
 .share-card .share-link a:hover{background:rgba(79,216,255,.16);box-shadow:var(--glow);}
+.share-card .share-media{
+  margin:16px 0 0;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);background:rgba(4,7,13,.55);
+  height:150px;flex-shrink:0;
+}
+.share-card .share-media img,.share-card .share-media video{
+  width:100%;height:100%;object-fit:cover;display:block;background:#04070d;
+}
+.share-card.has-media p{
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.share-card.has-media .share-link{padding-top:14px;}
 .deck-ctrl{
   display:flex;align-items:center;justify-content:center;gap:22px;
   margin-top:30px;
@@ -618,6 +630,20 @@ ul{margin:0;padding:0;list-style:none;}
 .admin-foot .btn{padding:11px 16px;font-size:11.5px;flex:1 1 auto;justify-content:center;}
 .btn-danger{border-color:rgba(255,125,125,.35);color:#ffb3b3;background:rgba(255,125,125,.05);}
 .btn-danger:hover{background:rgba(255,125,125,.14);}
+/* 媒体选择器（ADMIN 表单） */
+.media-pick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.media-pick .hint{font-family:var(--font-mono);font-size:10px;color:var(--ink-mute);letter-spacing:.08em;}
+.media-pick .btn{padding:9px 14px;font-size:11px;}
+.media-prev{
+  margin-top:10px;position:relative;border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;width:200px;background:rgba(4,7,13,.5);
+}
+.media-prev img,.media-prev video{width:100%;max-height:140px;object-fit:cover;display:block;}
+.media-prev .rm{
+  position:absolute;top:6px;right:6px;cursor:pointer;
+  width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,125,125,.45);
+  background:rgba(10,6,8,.8);color:#ffb3b3;font-size:12px;line-height:1;
+}
 
 /* ---------- ADMIN 密码门 ---------- */
 #adminGate{
@@ -892,6 +918,17 @@ body.locked{overflow:hidden;}
       <div class="fld">
         <label>正文 / Body</label>
         <textarea id="fDesc" maxlength="300" placeholder="分享内容描述…"></textarea>
+      </div>
+      <div class="fld">
+        <label>配图 / 视频（可选）</label>
+        <div class="media-pick">
+          <input type="file" id="fMedia" accept="image/*,video/*" hidden>
+          <button class="btn btn-ghost" id="mediaBtn" type="button">选择图片 / 视频</button>
+          <span class="hint" id="mediaHint">未选择 · 图片≤6MB / 视频≤24MB</span>
+        </div>
+        <div class="media-prev" id="mediaPrev" hidden>
+          <button class="rm" id="mediaRm" type="button" title="移除媒体">✕</button>
+        </div>
       </div>
       <div class="admin-foot" style="padding:0;border:0;">
         <button class="btn btn-primary" id="fSave" type="button">保存新卡片</button>
@@ -1599,12 +1636,14 @@ body.locked{overflow:hidden;}
     return JSON.parse(JSON.stringify(DEFAULT_SHARES));
   }
   function rowToItem(r){
-    return { id: r.id, so: r.sort_order, tag: r.tag, date: r.date, title: r.title, desc: r.body, link: r.link, linkText: r.link_text };
+    return { id: r.id, so: r.sort_order, tag: r.tag, date: r.date, title: r.title, desc: r.body, link: r.link, linkText: r.link_text,
+             mediaData: r.media_data || "", mediaKind: r.media_kind || "" };
   }
   function itemToRow(it, so){
     return { tag: it.tag || "动态", date: it.date || "", title: it.title || "（无标题）",
              body: it.desc || "", link: it.link || "",
-             link_text: it.linkText || (it.link ? "查看链接" : ""), sort_order: so || 0 };
+             link_text: it.linkText || (it.link ? "查看链接" : ""),
+             media_data: it.mediaData || "", media_kind: it.mediaKind || "", sort_order: so || 0 };
   }
   function cloudReload(){
     if (!cloudReady) { setCloudState("OFFLINE · 本地模式", true); return; }
@@ -1658,6 +1697,13 @@ body.locked{overflow:hidden;}
     }
     countEl.innerHTML = "<b>" + ("0" + (cur + 1)).slice(-2) + "</b> / " + ("0" + n).slice(-2);
   }
+  function cardMedia(it){
+    if (!it.mediaData) { return ""; }
+    if (it.mediaKind === "video") {
+      return '<div class="share-media"><video src="' + it.mediaData + '" controls muted playsinline loop preload="metadata"></video></div>';
+    }
+    return '<div class="share-media"><img src="' + it.mediaData + '" alt="" loading="lazy"></div>';
+  }
   function renderDeck(){
     deckEl.innerHTML = "";
     if (!shares.length) {
@@ -1668,12 +1714,12 @@ body.locked{overflow:hidden;}
     }
     shares.forEach(function(it, i){
       var c = document.createElement("article");
-      c.className = "share-card";
+      c.className = "share-card" + (it.mediaData ? " has-media" : "");
       c.dataset.i = i;
       c.innerHTML = '<span class="badge">' + esc(it.tag || "动态") + '</span>' +
         '<div class="share-meta"><span class="dt mono">' + esc(it.date || "") + '</span></div>' +
         '<h3>' + esc(it.title || "") + '</h3>' +
-        '<p>' + esc(it.desc || "") + '</p>' + cardLink(it);
+        '<p>' + esc(it.desc || "") + '</p>' + cardMedia(it) + cardLink(it);
       deckEl.appendChild(c);
     });
     applyDeck();
@@ -1697,7 +1743,7 @@ body.locked{overflow:hidden;}
     setTimeout(function(){ deckBusy = false; }, 440);
   }
   deckEl.addEventListener("click", function(e){
-    if (e.target.closest("a")) { return; }
+    if (e.target.closest("a") || e.target.closest("video")) { return; }
     deckNext();
   });
   var bNext = document.getElementById("deckNext");
@@ -1715,8 +1761,64 @@ body.locked{overflow:hidden;}
   var fLink = document.getElementById("fLink");
   var fSave = document.getElementById("fSave");
   var editIdx = -1;
+  var fMedia = document.getElementById("fMedia"), mediaBtn = document.getElementById("mediaBtn");
+  var mediaHint = document.getElementById("mediaHint"), mediaPrev = document.getElementById("mediaPrev");
+  var HINT_DEFAULT = "未选择 · 图片≤6MB / 视频≤24MB";
+  var pendingMedia = null; /* { data: dataURI, kind: 'image'|'video', name } */
 
-  function persistShares(){ try { localStorage.setItem(LS_KEY, JSON.stringify(shares)); } catch(e){} }
+  function renderMediaPreview(){
+    mediaPrev.innerHTML = '<button class="rm" id="mediaRm" type="button" title="移除媒体">✕</button>';
+    if (!pendingMedia) {
+      mediaPrev.hidden = true;
+      mediaHint.textContent = HINT_DEFAULT;
+      return;
+    }
+    mediaPrev.hidden = false;
+    if (pendingMedia.kind === "video") {
+      var v = document.createElement("video");
+      v.src = pendingMedia.data; v.muted = true; v.preload = "metadata"; v.playsInline = true;
+      mediaPrev.appendChild(v);
+    } else {
+      var im = document.createElement("img");
+      im.src = pendingMedia.data; im.alt = "预览";
+      mediaPrev.appendChild(im);
+    }
+    mediaHint.textContent = "已选择：" + pendingMedia.name;
+    document.getElementById("mediaRm").addEventListener("click", function(){
+      pendingMedia = null; fMedia.value = ""; renderMediaPreview();
+    });
+  }
+  mediaBtn.addEventListener("click", function(){ fMedia.click(); });
+  fMedia.addEventListener("change", function(){
+    var f = fMedia.files && fMedia.files[0];
+    if (!f) { return; }
+    var isImg = /^image\//.test(f.type), isVid = /^video\//.test(f.type);
+    if (!isImg && !isVid) { window.alert("仅支持图片或视频文件。"); fMedia.value = ""; return; }
+    var cap = isImg ? 6 * 1024 * 1024 : 24 * 1024 * 1024;
+    if (f.size > cap) {
+      window.alert("文件过大：图片不超过 6MB，视频不超过 24MB。当前 " + (f.size / 1024 / 1024).toFixed(1) + "MB。");
+      fMedia.value = ""; return;
+    }
+    var r = new FileReader();
+    r.onload = function(){
+      pendingMedia = { data: r.result, kind: isVid ? "video" : "image", name: f.name };
+      renderMediaPreview();
+    };
+    r.onerror = function(){ window.alert("读取文件失败，请重试。"); };
+    r.readAsDataURL(f);
+  });
+
+  function persistShares(){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(shares)); return; }
+    catch(e){ /* 媒体可能撑爆 5MB 配额 → 缓存剥离媒体后重试 */ }
+    try {
+      var slim = shares.map(function(x){
+        var c = {}; for (var k in x) { if (k !== "mediaData") { c[k] = x[k]; } }
+        return c;
+      });
+      localStorage.setItem(LS_KEY, JSON.stringify(slim));
+    } catch(e2){}
+  }
   function adminFail(e){
     window.alert("云端操作失败：" + (e && e.message ? e.message : "未知错误") + "。改动未同步，请稍后重试。");
     cloudReload();
@@ -1729,6 +1831,7 @@ body.locked{overflow:hidden;}
   function resetForm(){
     editIdx = -1;
     fTag.value = fDate.value = fTitle.value = fDesc.value = fLink.value = "";
+    pendingMedia = null; fMedia.value = ""; renderMediaPreview();
     fSave.textContent = "保存新卡片";
   }
   function fillForm(it, i){
@@ -1736,6 +1839,8 @@ body.locked{overflow:hidden;}
     fTag.value = it.tag || ""; fDate.value = it.date || "";
     fTitle.value = it.title || ""; fDesc.value = it.desc || "";
     fLink.value = it.link || "";
+    pendingMedia = it.mediaData ? { data: it.mediaData, kind: it.mediaKind || "image", name: "已保存媒体" } : null;
+    fMedia.value = ""; renderMediaPreview();
     fSave.textContent = "保存修改（#" + (i + 1) + "）";
     fTitle.focus();
   }
@@ -1749,7 +1854,7 @@ body.locked{overflow:hidden;}
       var d = document.createElement("div");
       d.className = "admin-item";
       d.innerHTML = '<div class="tt"><b>' + esc(it.title || "(无标题)") + '</b>' +
-        '<span>' + esc(it.tag || "") + ' · ' + esc(it.date || "") + '</span></div>' +
+        '<span>' + esc(it.tag || "") + ' · ' + esc(it.date || "") + (it.mediaData ? ' · ' + (it.mediaKind === "video" ? "含视频" : "含图片") : '') + '</span></div>' +
         '<button type="button" data-act="top" data-i="' + i + '" title="置顶显示">置顶</button>' +
         '<button type="button" data-act="edit" data-i="' + i + '">编辑</button>' +
         '<button type="button" class="del" data-act="del" data-i="' + i + '">删除</button>';
@@ -1787,7 +1892,8 @@ body.locked{overflow:hidden;}
     if (!title) { fTitle.focus(); fTitle.style.borderColor = "rgba(255,125,125,.6)"; return; }
     fTitle.style.borderColor = "";
     var obj = { tag: fTag.value.trim() || "动态", date: fDate.value.trim(), title: title,
-                desc: fDesc.value.trim(), link: fLink.value.trim(), linkText: fLink.value.trim() ? "查看链接" : "" };
+                desc: fDesc.value.trim(), link: fLink.value.trim(), linkText: fLink.value.trim() ? "查看链接" : "",
+                mediaData: pendingMedia ? pendingMedia.data : "", mediaKind: pendingMedia ? pendingMedia.kind : "" };
     if (cloudMode) {
       if (editIdx >= 0 && shares[editIdx] && shares[editIdx].id != null) {
         cloud.database.from("share_posts").update(itemToRow(obj, shares[editIdx].so)).eq("id", shares[editIdx].id)
