@@ -1873,6 +1873,8 @@ body.locked{overflow:hidden;}
     importFile.value = "";
   });
   var adminGate = document.getElementById("adminGate");
+  var ADMIN_HASH = "79fb4efb2ed51ee437b7df0571f5049ae86c4a49ab3279893f0986623f6cceeb"; /* 后台密钥哈希（独立于进站密码，勿存明文） */
+  var ADMIN_FB   = "7c7955bc";                                                         /* djb2 兜底（无 SubtleCrypto 环境） */
   var ADMIN_S = "ky_admin_ok";
   function adminUnlocked(){ try { return sessionStorage.getItem(ADMIN_S) === "1"; } catch(e){ return false; } }
   function openAdmin(){
@@ -1898,7 +1900,7 @@ body.locked{overflow:hidden;}
       var v = inp.value;
       if (!v) { return; }
       sha256hex(v).then(function(h){
-        if (h === GATE_HASH || h === GATE_FB) {
+        if (h === ADMIN_HASH || h === ADMIN_FB) {
           try { sessionStorage.setItem(ADMIN_S, "1"); } catch(e){} /* 本次会话内免重复验证 */
           inp.value = "";
           errEl.textContent = "";
