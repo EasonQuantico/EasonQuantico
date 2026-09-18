@@ -479,7 +479,7 @@ ul{margin:0;padding:0;list-style:none;}
 /* ============================================================
    SHARES / 分享动态 · 卡片堆叠
    ============================================================ */
-.deck{position:relative;max-width:780px;margin:0 auto;height:400px;perspective:1400px;}
+.deck{position:relative;max-width:780px;margin:0 auto;aspect-ratio:1/1;perspective:1400px;}
 .share-card{
   position:absolute;inset:0;
   border:1px solid var(--line);border-radius:var(--r);
@@ -487,6 +487,7 @@ ul{margin:0;padding:0;list-style:none;}
   backdrop-filter:blur(10px);
   padding:clamp(26px,3.4vw,40px);
   display:flex;flex-direction:column;gap:0;
+  overflow:hidden;
   transform:translateY(18px) scale(.93);opacity:0;
   transition:transform .55s cubic-bezier(.2,.7,.3,1),opacity .5s ease,border-color .3s;
   pointer-events:none;
@@ -521,7 +522,7 @@ ul{margin:0;padding:0;list-style:none;}
 .share-card .share-media{
   margin:16px 0 0;border-radius:12px;overflow:hidden;
   border:1px solid var(--line);background:rgba(4,7,13,.55);
-  height:150px;flex-shrink:0;
+  flex:1 1 auto;min-height:96px;max-height:52%;
 }
 .share-card .share-media img,.share-card .share-media video{
   width:100%;height:100%;object-fit:cover;display:block;background:#04070d;
@@ -799,9 +800,6 @@ body.locked{overflow:hidden;}
   .cards.c3{grid-template-columns:repeat(2,1fr);}
   .foot-grid{grid-template-columns:1fr 1fr;}
 }
-@media (max-width:900px){
-  .deck{height:440px;}
-}
 @media (max-width:860px){
   .nav-links{
     position:fixed;inset:70px 0 auto 0;
@@ -831,8 +829,13 @@ body.locked{overflow:hidden;}
   .award .yr{min-width:0;}
   .award .lvl{margin-left:0;}
   .entry .date{align-self:flex-start;}
-  .deck{height:480px;}
   .deck-ctrl{gap:14px;}
+  .share-card{padding:20px;}
+  .share-meta{margin:10px 0 8px;}
+  .share-card p{font-size:13.5px;line-height:1.7;margin-top:10px;}
+  .share-card.has-media p{-webkit-line-clamp:2;}
+  .share-card .share-media{margin:10px 0 0;min-height:80px;}
+  .share-card .share-link{padding-top:12px;}
   .gate-form{flex-direction:column;}
   .gate-form .btn{justify-content:center;}
   .fld-row{grid-template-columns:1fr;}
@@ -1610,6 +1613,7 @@ body.locked{overflow:hidden;}
 
   /* ---------- 9. 分享动态：卡片堆叠 ---------- */
   var LS_KEY = "ky_shares_v1";
+  var LS_PEND = "ky_shares_pending_v1"; /* 本地模式下的待同步内容备份 */
   var DEFAULT_SHARES = [
     { tag:"动态", date:"2026.09", title:"个人主页 2.0 上线", link:"", linkText:"",
       desc:"你正在看的这一页，就是简历上 NFC 贴纸「碰一碰」的落点——项目进展、比赛结果与分享动态都会持续同步到这里。" },
@@ -1617,7 +1621,7 @@ body.locked{overflow:hidden;}
       desc:"新能源汽车电子硬件与整车线束测试进行中：环境 / 耐久 / 高低压检测，检测报告出具与检测流程设计验证。" },
     { tag:"竞赛", date:"2026.06", title:"光电设计大赛 · 校级二等奖", link:"", linkText:"",
       desc:"创意组《「逐日」海上光伏双轴追踪系统》——项目负责人，完成方案可行性论证与设计书撰写。" },
-    { tag:"项目", date:"2025.12", title:"STM32 多功能电子琴 · GitHub 开源", link:"https://github.com/EasonQuantico", linkText:"GitHub ↗",
+    { tag:"项目", date:"2025.12", title:"STM32 多功能电子琴 · GitHub 开源", link:"https://github.com/EasonQuantico/E-Piano", linkText:"GitHub ↗",
       desc:"PWM 音频 + RC 滤波 + 十二平均律校准，获评「优秀课设」；代码、原理图与调试日志已全部开源。" },
     { tag:"作品", date:"2026.08", title:"摄影作品集 · 视觉中国签约", link:"", linkText:"",
       desc:"持续更新的摄影作品集，精选图片经视觉中国供稿发布。产品 Demo、宣传物料与技术文档配图均可独立完成。" }
@@ -1625,6 +1629,17 @@ body.locked{overflow:hidden;}
   var deckEl = document.getElementById("deck");
   var countEl = document.getElementById("deckCount");
   var shares = loadShares();
+  /* 恢复上次本地模式下的待同步内容（按 标题+日期 去重） */
+  (function(){
+    try {
+      var p = JSON.parse(localStorage.getItem(LS_PEND) || "null");
+      if (Array.isArray(p)) {
+        p.forEach(function(it){
+          if (it && it.title && !shares.some(function(x){ return x.title === it.title && x.date === it.date; })) { shares.push(it); }
+        });
+      }
+    } catch(e){}
+  })();
   var cur = 0, deckBusy = false;
   var cloudMode = false; /* true = 数据已与云端同步 */
 
@@ -1653,6 +1668,9 @@ body.locked{overflow:hidden;}
         if (res && res.error) { throw res.error; }
         var rows = (res && res.data) || [];
         if (rows.length) {
+          var pending = shares.filter(function(x){
+            return x && x.id == null && !DEFAULT_SHARES.some(function(d){ return d.title === x.title; });
+          });
           shares = rows.map(rowToItem);
           cloudMode = true;
           persistShares();
@@ -1660,6 +1678,7 @@ body.locked{overflow:hidden;}
           renderDeck();
           if (admin.classList.contains("open")) { renderAdminList(); }
           setCloudState("CONNECTED · 全网同步");
+          if (pending.length) { pushPending(pending); }
         } else {
           /* 空表 → 播种默认内容 */
           var seed = JSON.parse(JSON.stringify(DEFAULT_SHARES)).map(function(it, i){ return itemToRow(it, 50 - i * 10); });
@@ -1670,6 +1689,23 @@ body.locked{overflow:hidden;}
         cloudMode = false;
         setCloudState("OFFLINE · 本地模式", true);
       });
+  }
+  /* 把本地模式下产生的、尚未上云的卡片补同步到云端 */
+  function pushPending(list){
+    try { localStorage.setItem(LS_PEND, JSON.stringify(list)); } catch(e){}
+    var so = maxSortOrder();
+    var seq = Promise.resolve();
+    list.forEach(function(it){
+      so += 10;
+      var row = itemToRow(it, so);
+      seq = seq.then(function(){ return cloud.database.from("share_posts").insert(row); });
+    });
+    seq.then(function(){
+      try { localStorage.removeItem(LS_PEND); } catch(e){}
+      cloudReload();
+    }).catch(function(){
+      setCloudState("有本地内容待同步 · 稍后刷新重试", true);
+    });
   }
   function esc(s){
     var d = document.createElement("div");
@@ -1906,6 +1942,7 @@ body.locked{overflow:hidden;}
       }
       return;
     }
+    window.alert("注意：当前为本地模式（云端未连接），改动仅保存在本浏览器，其他设备暂时看不到；云端恢复连接后会自动补同步。建议使用正式域名访问后在云端状态为 CONNECTED 时管理内容。");
     if (editIdx >= 0) { shares[editIdx] = obj; } else { shares.unshift(obj); cur = 0; }
     persistShares();
     renderAdminList();
