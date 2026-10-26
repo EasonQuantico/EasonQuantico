@@ -1654,11 +1654,16 @@ body.locked{overflow:hidden;}
   var cloudMode = false; /* true = 数据已与云端同步 */
 
   function loadShares(){
+    var out = [];
     try {
       var s = JSON.parse(localStorage.getItem(LS_KEY) || "null");
-      if (Array.isArray(s) && s.length) { return s; }
+      if (Array.isArray(s)) { out = s.filter(function(x){ return x && x.title; }); }
     } catch(e){}
-    return JSON.parse(JSON.stringify(DEFAULT_SHARES));
+    /* 补齐新增的默认卡片：旧缓存里没有的默认卡自动追加，避免新内容被旧缓存挡住 */
+    DEFAULT_SHARES.forEach(function(d){
+      if (!out.some(function(x){ return x.title === d.title; })) { out.push(JSON.parse(JSON.stringify(d))); }
+    });
+    return out.length ? out : JSON.parse(JSON.stringify(DEFAULT_SHARES));
   }
   function rowToItem(r){
     return { id: r.id, so: r.sort_order, tag: r.tag, date: r.date, title: r.title, desc: r.body, link: r.link, linkText: r.link_text,
