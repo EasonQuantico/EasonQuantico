@@ -29,9 +29,10 @@
 
 - **前端**：原生 HTML / CSS / JavaScript，单文件实现，零框架、零构建
 - **视觉资产**：无背景视频、无位图纹理；赛道地图为内联 SVG 路径 + `getPointAtLength()` 行驶光点，其余全部由 CSS 渐变/遮罩绘制
+- **分享卡片媒体**：卡片为固定宽高比（桌面 1.34、≤680px 0.82、≤380px 0.74），媒体区占满剩余高度，图片/视频以 `object-fit:contain` 整幅等比呈现——不裁切、不变形、卡片内不出现滚动条；左右留白用同图模糊衬底补齐，无配图的卡片改为刻度网格 + 幽灵序号
 - **主题色**：`#e10600`（Rosso）/ `#070506`（碳纤黑）/ `#f6f0ea`（暖白），等宽字体承担 HUD 标签与数字
 - **云端**：WorkBuddy Cloud Service（PostgreSQL + 行级安全 RLS + Origin 校验），前端经 CDN SDK 读写
-- **部署**：WorkBuddy Sites（主站，云同步完整生效）+ GitHub Pages（代码镜像，云端不可达时自动降级）
+- **部署**：GitHub Pages（`main` 分支根目录，提交后自动重建）+ WorkBuddy Cloud Service（分享动态的云端数据，不可达时前端自动降级为本地模式）
 - **字体**：系统字体栈（含思源/苹方/雅黑回退）+ 等宽字体栈（JetBrains Mono → Cascadia → Consolas），零 Web Font 请求
 - **无障碍**：`prefers-reduced-motion` 下关闭动效并保留首帧；遥测面板 `aria-hidden`，正文语义结构完整
 
