@@ -575,7 +575,7 @@ body::after{
 .share-media.is-video::before,.share-media.is-video::after{display:none}
 /* 无配图的卡片：同一块媒体区改为刻度网格 + 幽灵序号，避免大面积留白 */
 .share-media.is-empty{
-  display:grid;place-items:center;grid-auto-rows:min-content;align-content:center;gap:10px;
+  display:grid;place-items:center;grid-auto-rows:min-content;align-content:center;gap:22px;
   background:
     radial-gradient(72% 68% at 50% 42%,rgba(225,6,0,.10),transparent 72%),
     repeating-linear-gradient(90deg,rgba(246,240,234,.035) 0 1px,transparent 1px 48px),
@@ -590,7 +590,7 @@ body::after{
 }
 @supports (font-size:1cqh){
   .share-media{container-type:size}
-  .share-media.is-empty .no{font-size:min(124px,42cqh)}
+  .share-media.is-empty .no{font-size:min(112px,36cqh)}
   .share-media.is-empty .cap{font-size:min(8.5px,5cqh)}
 }
 .share-media.is-empty .cap{
