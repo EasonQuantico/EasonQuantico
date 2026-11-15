@@ -44,6 +44,7 @@
 ├── gate-logo.png                   # 门禁页标识图
 ├── 匡烨-简历.pdf / Kuang-Ye-Resume.pdf  # 中英文简历
 ├── build_standalone.py             # 单文件版构建脚本
+├── deploy_pages.py                 # 部署脚本：经 GitHub API 提交并触发 Pages 重建
 ├── legacy/                         # 旧版（青色科幻风）存档，仅备份不参与部署
 └── README.md
 ```
@@ -75,8 +76,10 @@ id BIGINT PK | tag | date | title | body | link | link_text | media_data | media
 修改内容后需同步三个发布面：
 
 1. **改 `index.html`**（源文件，一切改动从这里开始）
-2. **重建单文件版**：运行内联构建脚本（资源 base64 化 + PDF 链接改写为运行时 Blob）
-3. **重新部署 WorkBuddy 站点**（主站）并 **push GitHub**（Pages 自动重建）
+2. **重建单文件版**：`python build_standalone.py`（资源 base64 化 + PDF 链接改写为运行时 Blob）
+3. **部署**：`python deploy_pages.py` 提交到 GitHub（Pages 自动重建，约 20 秒生效）
+
+> 说明：本地 git 在非交互环境可能因凭证助手或传输问题失败（`fetch-pack: invalid index-pack output`），因此部署改用 GitHub Git Data API，只依赖已登录的 `gh` CLI。
 
 ## QA 方法
 
