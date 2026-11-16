@@ -358,6 +358,71 @@ body::after{
   opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease;white-space:nowrap;
 }
 .sim-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* 车队无线电弹窗：深色字幕卡 + 红色车手名 + 白色 RADIO + 车号 + 盾标 */
+.sim-radio{
+  position:absolute;left:6px;bottom:6px;z-index:4;
+  width:min(52%,200px);padding:4px 7px 5px;
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:end;gap:1px 6px;
+  background:
+    linear-gradient(140deg,rgba(225,6,0,.16) 0%,rgba(225,6,0,0) 46%),
+    linear-gradient(158deg,rgba(26,19,21,.97) 0%,rgba(9,6,7,.97) 58%,rgba(4,3,4,.96) 100%);
+  border:1px solid rgba(225,6,0,.44);border-left:2px solid var(--red);
+  box-shadow:0 22px 46px -26px rgba(0,0,0,.98),inset 0 1px 0 rgba(255,255,255,.06);
+  font-family:var(--mono);pointer-events:none;
+  opacity:0;transform:translateY(9px) scale(.985);transform-origin:left bottom;
+  transition:opacity .16s ease,transform .26s cubic-bezier(.16,.8,.28,1);
+}
+.sim-radio::after{
+  content:"";position:absolute;right:0;top:0;width:10px;height:10px;
+  background:linear-gradient(225deg,rgba(225,6,0,.85),rgba(225,6,0,0));
+}
+.sim-radio.show{opacity:1;transform:none}
+.sim-view.ov .sim-radio{opacity:0}
+.rd-top{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding-bottom:2px;margin-bottom:1px;border-bottom:1px solid rgba(246,240,234,.12);
+  font-size:6.5px;letter-spacing:.17em;text-transform:uppercase;color:rgba(246,240,234,.44);
+}
+.rd-live{display:inline-flex;align-items:center;gap:3px;color:var(--red-hi)}
+.rd-live i{width:3px;height:3px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+.rd-num{
+  font-size:26px;font-weight:800;line-height:.8;letter-spacing:-.07em;
+  color:var(--red);font-variant-numeric:tabular-nums;
+  font-style:italic;transform:skewX(-6deg);text-shadow:0 0 18px rgba(225,6,0,.42);
+}
+.rd-id{display:flex;flex-direction:column;align-items:flex-end;min-width:0;line-height:1}
+.rd-id b{
+  font-size:19px;font-weight:800;font-style:italic;letter-spacing:-.01em;color:var(--red);
+  transform:skewX(-6deg);text-transform:uppercase;text-shadow:0 0 16px rgba(225,6,0,.34);
+}
+.rd-id em{
+  font-style:normal;font-size:11px;font-weight:800;letter-spacing:.02em;color:#f8f4ee;
+  line-height:1.05;transform:skewX(-6deg);text-transform:uppercase;
+}
+.rd-badge{width:15px;height:17px;margin-bottom:1px;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
+.rd-msg{
+  grid-column:1/-1;display:flex;align-items:center;gap:4px;
+  margin-top:2px;padding-top:2px;border-top:1px solid rgba(225,6,0,.30);
+  font-size:8.5px;line-height:1.25;letter-spacing:.01em;color:#f8f4ee;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.rd-msg::before{content:"“";color:var(--red-hi);font-size:11px;line-height:1;font-weight:700}
+@media (max-width:640px){
+  .sim-radio{left:5px;bottom:5px;width:min(58%,178px);padding:4px 6px 5px}
+  .rd-num{font-size:22px}
+  .rd-id b{font-size:16px}
+  .rd-id em{font-size:9.5px}
+  .rd-badge{width:13px;height:15px}
+  .rd-msg{font-size:7px}
+}
+/* 极窄画面：底部左侧会被排行榜占满，弹窗改挂右上（避开赛车与最小地图） */
+@media (max-width:480px){
+  .sim-radio{
+    left:auto;right:5px;bottom:auto;top:27px;
+    width:min(56%,168px);transform:translateY(-7px) scale(.985);transform-origin:right top;
+  }
+}
 .sim-ov{
   position:absolute;inset:0;z-index:3;display:grid;place-content:center;justify-items:center;gap:8px;
   text-align:center;padding:14px 14px 22%;
@@ -1148,7 +1213,7 @@ body::after{
     <!-- SIM · F1 赛道模拟器 + 实时排行榜 + 遥测 -->
     <aside class="hud" aria-label="F1 赛道模拟器">
       <div class="hud-bar">
-        <span>SF-24 // CAR <b>16</b> // <b>KUANG</b></span>
+        <span>SF-24 // CAR <b>16</b> // <b>YIP</b></span>
         <span class="hud-live" id="simState"><i></i><b id="simStateTx">AUTOPILOT</b></span>
       </div>
 
@@ -1168,6 +1233,26 @@ body::after{
           <div class="sim-hud">
             <span class="sb">BEST <b id="simBest">--:--.---</b></span>
             <span class="mb" id="simMode">AUTO</span>
+          </div>
+
+          <!-- 车队无线电弹窗（模仿转播字幕卡） -->
+          <div class="sim-radio" id="simRadio" aria-hidden="true">
+            <div class="rd-top">
+              <span class="rd-live"><i></i>TEAM RADIO</span>
+              <span class="rd-car">CAR 16 · SF-24</span>
+            </div>
+            <span class="rd-num">16</span>
+            <span class="rd-id"><b>YIP</b><em>RADIO</em></span>
+            <svg class="rd-badge" viewBox="0 0 26 30" aria-hidden="true">
+              <path d="M13 1.8 2.7 5.2v10.1c0 6.1 4.3 10.5 10.3 13 6-2.5 10.3-6.9 10.3-13V5.2L13 1.8Z"
+                    fill="#f2c200" stroke="#100c0d" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M4.6 6.9h16.8v2.1H4.6z" fill="#009246"/>
+              <path d="M4.6 9h16.8v2.1H4.6z" fill="#f8f4ee"/>
+              <path d="M4.6 11.1h16.8v2.1H4.6z" fill="#c8102e"/>
+              <text x="13" y="23.6" text-anchor="middle" font-family="Georgia,'Times New Roman',serif"
+                    font-size="7.6" font-weight="700" letter-spacing=".4" fill="#141011">SF</text>
+            </svg>
+            <div class="rd-msg" id="simRadioMsg">I am stupid...</div>
           </div>
 
           <div class="sim-toast" id="simToast"></div>
@@ -1701,6 +1786,8 @@ body::after{
     var ovHint = document.getElementById("simOvHint");
     var ovBtn = document.getElementById("simOvBtn");
     var toastEl = document.getElementById("simToast");
+    var radioEl = document.getElementById("simRadio");
+    var radioMsgEl = document.getElementById("simRadioMsg");
     var bPlay = document.getElementById("simPlay");
     var bQuit = document.getElementById("simQuit");
     var stateTx = document.getElementById("simStateTx");
@@ -1718,6 +1805,7 @@ body::after{
     var st = { running: false, paused: false, mode: "auto", takenOver: false };
     var rafId = 0, lastTs = 0, teleT = 0, lbT = 0;
     var shake = 0, flash = 0, toastT = 0, lastHit = 0;
+    var radioCool = 0, radioTimer = 0;
 
     function now(){ return (window.performance && performance.now) ? performance.now() : Date.now(); }
     function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
@@ -1957,7 +2045,7 @@ body::after{
 
     /* ---------- 3.2 车队 / 车辆 ---------- */
     var TEAMS = [
-      { code: "KUA", body: "#e10600", shade: "#7e0300", accent: "#ffe3dc", helmet: "#f6f0ea" },
+      { code: "YIP", body: "#e10600", shade: "#7e0300", accent: "#ffe3dc", helmet: "#f6f0ea" },
       { code: "HAM", body: "#00d2be", shade: "#006b60", accent: "#d6fff9", helmet: "#ffe14d" },
       { code: "NOR", body: "#ff8000", shade: "#9a4a00", accent: "#1f3f86", helmet: "#f6f0ea" },
       { code: "VER", body: "#1d2c66", shade: "#0c1436", accent: "#e2c542", helmet: "#c1121f" },
@@ -1968,7 +2056,7 @@ body::after{
       { code: "BOT", body: "#52e252", shade: "#1d6b1d", accent: "#141a12", helmet: "#f6f0ea" },
       { code: "TSU", body: "#8ea2dd", shade: "#3f4f7a", accent: "#f6f0ea", helmet: "#20263a" }
     ];
-    var NAMES = ["KUANG", "HAMLIN", "NORRIS", "VERST", "ALONSO", "GASLY", "ALBON", "HULK", "BOTTAS", "TSUNODA"];
+    var NAMES = ["YIP", "HAMLIN", "NORRIS", "VERST", "ALONSO", "GASLY", "ALBON", "HULK", "BOTTAS", "TSUNODA"];
 
     function mixUp(hex, f){
       var n = parseInt(hex.slice(1), 16);
@@ -1995,14 +2083,14 @@ body::after{
     var G = {
       /* 单体壳：细长鼻锥 → 座舱 → 收窄尾部 */
       body: mir([
-        [0.000, 2.58], [0.072, 2.44], [0.102, 2.16], [0.118, 1.86], [0.172, 1.56],
-        [0.248, 1.20], [0.318, 0.82], [0.358, 0.38], [0.362, -0.10], [0.332, -0.60],
+        [0.000, 2.58], [0.105, 2.44], [0.140, 2.16], [0.158, 1.86], [0.205, 1.56],
+        [0.262, 1.20], [0.322, 0.82], [0.368, 0.38], [0.372, -0.10], [0.332, -0.60],
         [0.292, -1.18], [0.252, -1.78], [0.186, -2.16], [0.000, -2.28]
       ]),
       /* 引擎盖顶面（窄，形成中脊） */
       deck: mir([
-        [0.000, 2.28], [0.058, 2.04], [0.074, 1.72], [0.104, 1.38], [0.156, 1.02],
-        [0.196, 0.58], [0.196, 0.04], [0.172, -0.52], [0.132, -1.10], [0.074, -1.68],
+        [0.000, 2.28], [0.075, 2.04], [0.095, 1.72], [0.128, 1.38], [0.175, 1.02],
+        [0.212, 0.58], [0.212, 0.04], [0.172, -0.52], [0.132, -1.10], [0.074, -1.68],
         [0.000, -1.94]
       ]),
       /* 侧箱：全车最宽处 */
@@ -2229,7 +2317,11 @@ body::after{
       if (over > 0){
         a -= 20 * Math.min(1, over / 1.3);
         c.lat -= (c.lat > 0 ? 1 : -1) * Math.max(0.5, Math.min(over, 1.2)) * 3.4 * dt;
-        if (c === me) { shake = Math.max(shake, 0.24); }
+        if (c === me){
+          shake = Math.max(shake, 0.24);
+          /* 四轮整体越出白线 → 车队无线电提示 */
+          if (over > 0.55 && c.v > 12) { radio(RADIO_TXT); }
+        }
       }
       c.v = clamp(v + a * dt, 0, TOPV);
 
@@ -2239,7 +2331,7 @@ body::after{
         if (c === me){
           var t0 = now();
           if (t0 - lastHit > 620 && c.v > 12){
-            lastHit = t0; c.v *= 0.84; flash = 1; shake = 1; toast("WALL CONTACT");
+            lastHit = t0; c.v *= 0.84; flash = 1; shake = 1;   // 撞击反馈交给无线电字幕卡
           }
         } else if (c.v > 9){
           c.v *= Math.pow(0.45, dt);
@@ -2300,6 +2392,8 @@ body::after{
           var push = (1.9 - Math.abs(dl)) * 0.5 * (dl >= 0 ? 1 : -1);
           a.lat = clamp(a.lat + push, -HW - 0.6, HW + 0.6);
           b.lat = clamp(b.lat - push, -HW - 0.6, HW + 0.6);
+          /* 玩家与对手发生接触 → 车队无线电提示 */
+          if ((a === me || b === me) && Math.abs(dd) < 3.6){ radio(RADIO_TXT); }
           if (Math.abs(dd) < 4.2){
             a.v *= Math.pow(0.55, 1 / 60); b.v *= Math.pow(0.55, 1 / 60);
           }
@@ -2344,6 +2438,27 @@ body::after{
       setTimeout(function(){
         if (Date.now() - toastT >= 900) { toastEl.classList.remove("show"); }
       }, 950);
+    }
+
+    /* 车队无线电：撞车 / 冲出赛道时弹出字幕卡（含冷却，避免连环刷屏） */
+    var RADIO_TXT = "I am stupid...";
+    function radio(msg){
+      if (!radioEl || !msg) { return; }
+      var t0 = now();
+      if (t0 < radioCool) { return; }
+      radioCool = t0 + 3400;
+      if (radioMsgEl) { radioMsgEl.textContent = msg; }
+      radioEl.classList.add("show");
+      if (radioTimer) { clearTimeout(radioTimer); }
+      radioTimer = setTimeout(function(){
+        radioEl.classList.remove("show");
+        radioTimer = 0;
+      }, 2300);
+    }
+    function radioHide(){
+      if (radioTimer) { clearTimeout(radioTimer); radioTimer = 0; }
+      radioCool = 0;
+      if (radioEl) { radioEl.classList.remove("show"); }
     }
 
     function quad(p1, p2, p3, p4, col){
@@ -2609,6 +2724,8 @@ body::after{
       list.sort(function(a, b){ return b.dsx - a.dsx; });
 
       var CS = 1.20;
+      /* 车体视觉比例修正：横向加宽、纵向略收短，避免俯视机位下车身显得窄长 */
+      var KX = 1.26, KZ = 0.88;
       for (i = 0; i < list.length; i++){
         var it = list[i], oc = it.c, sm2 = it.s;
         var ox = sm2.x, oy = sm2.y;
@@ -2622,8 +2739,9 @@ body::after{
         /* 车体局部 → 世界偏移 → 相机坐标：两步旋转不能合并 */
         var pj = (function(dx0, dz0, ocs, oco){
           return function(x, z, y){
-            var xw = (x * ocs + z * oco) * CS;
-            var yw = (-x * oco + z * ocs) * CS;
+            var lx = x * KX, lz = z * KZ;
+            var xw = (lx * ocs + lz * oco) * CS;
+            var yw = (-lx * oco + lz * ocs) * CS;
             return projL(dx0 + xw * cs - yw * co, y, dz0 + xw * co + yw * cs);
           };
         })(dx0, dz0, ocs, oco);
@@ -2810,6 +2928,7 @@ body::after{
       keys.l = keys.r = keys.u = keys.d = 0;
       padReset();
       shake = 0; flash = 0;
+      radioHide();
       lbRender();
       telemetry();
       sync();
@@ -2864,6 +2983,7 @@ body::after{
       padReset();
       for (var i = 0; i < cars.length; i++){ cars[i].v = 0; cars[i].vt = 0; }
       shake = 0; flash = 0;
+      radioHide();
       sync();
       telemetry();
       draw();
@@ -2984,7 +3104,7 @@ body::after{
         cars: cars, me: me, st: st,
         track: function(){ return T; }, keys: keys,
         gen: buildTrack, build: function(t){ buildMap(t); return t; },
-        play: play, quit: quit
+        play: play, quit: quit, radio: radio
       };
     }
   })();
