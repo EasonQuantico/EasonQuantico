@@ -56,15 +56,23 @@
 
 ```
 ├── index.html                      # 主页面（所有样式、脚本、结构均在此文件内）
-├── 匡烨-个人主页-单文件版.html      # 单文件离线版（照片/PDF 全部 base64 内联，约 2.0MB）
+├── cloud-sdk.js                    # 云端 SDK（@tencent-ai/workbuddy-cloud-sdk IIFE，本地内置不依赖 CDN）
+├── 匡烨-个人主页-单文件版.html      # 单文件离线版（照片/PDF/SDK 全部内联，约 2.2MB）
 ├── photo.jpg                       # 证件照（420×560，页面内按原始比例与原始色彩完整呈现）
 ├── gate-logo.png                   # 门禁页标识图
 ├── 匡烨-简历.pdf / Kuang-Ye-Resume.pdf  # 中英文简历
 ├── build_standalone.py             # 单文件版构建脚本
-├── deploy_pages.py                 # 部署脚本：经 GitHub API 提交并触发 Pages 重建
+├── deploy_pages.py                 # GitHub 镜像部署脚本（经 Git Data API 提交）
 ├── legacy/                         # 旧版（青色科幻风）存档，仅备份不参与部署
 └── README.md
 ```
+
+## 上线与后台
+
+- **正式地址**：`https://kuangye-homepage.app.workbuddy.host/?sharecode=I54PCBNTF6`
+- **后台入口**：页面右上角 `ADMIN` 按钮 → 进站口令 → 「分享内容管理」面板；提示卡在该面板顶部「赛道提示卡 / Race Notes」区块维护
+- **同步方式**：后台每次保存都会立刻写云端 `share_posts`，页面加载时从云端拉取（按 `link_text` 时间戳取较新的一份），所以换设备 / 换浏览器 / 清缓存后仍是同一份内容
+- **只有一个域名能连云端**：云服务对 `Origin` 做精确校验，只有 `kuangye-homepage.app.workbuddy.host` 放行。`www.workbuddy.link/p/...`（iframe）与 `easonquantico.github.io`（镜像）都属跨域，会显示 `OFFLINE · 本地模式` 且出现左下角「非正式访问地址」提示——这是平台限制，不是页面 bug
 
 ## 数据架构
 
@@ -75,8 +83,9 @@ id BIGINT PK | tag | date | title | body | link | link_text | media_data | media
 ```
 
 - **RLS 策略**：匿名可读可写（SELECT/INSERT/UPDATE/DELETE 全放行），配合数据面 **Origin 强制校验**限制写入来源——仅应用注册域名可通过，GitHub Pages 等外部来源的请求会被拒绝
+- **SDK 内置**：`cloud-sdk.js` 与页面同目录加载，不再依赖 `cdn.jsdelivr.net`（国内网络常被重置，导致 `WorkBuddyCloud` 未定义、整站静默降级成本地模式）；仅当该文件缺失时才兜底加载 CDN 版本
 - **前端数据流**：优先云端拉取 → 云端不可达时显示 `OFFLINE · 本地模式`，回退 localStorage / 内置默认数据；云端空表时自动播种默认内容
-- **写入路径**：管理后台的所有增删改直接写云端，刷新即全网可见
+- **写入路径**：管理后台的所有增删改直接写云端，刷新即全网可见；写失败会在后台提示 `已保存 · 云端不可达，仅本机生效`
 - **媒体存储**：`media_data` 存完整 data URI（`data:image/*` 或 `data:video/*` 的 base64），`media_kind` 标记渲染方式。选择存库而非对象存储的原因：WorkBuddy Storage 仅对登录用户开放且无公开 URL，而分享媒体需要匿名可见；data URI 复用现有公开读通道，且 GitHub 镜像站也能加载。限制：图片 ≤6MB、视频 ≤24MB（前端校验），本地缓存超配额时自动剥离媒体重试
 
 ## 安全模型（如实说明）
@@ -90,13 +99,14 @@ id BIGINT PK | tag | date | title | body | link | link_text | media_data | media
 
 ## 更新流程
 
-修改内容后需同步三个发布面：
+改完内容后有两条发布面，**正式站以 WorkBuddy 发布为准**：
 
 1. **改 `index.html`**（源文件，一切改动从这里开始）
-2. **重建单文件版**：`python build_standalone.py`（资源 base64 化 + PDF 链接改写为运行时 Blob）
-3. **部署**：`python deploy_pages.py` 提交到 GitHub（Pages 自动重建，约 20 秒生效）
+2. **重建单文件版**：`python build_standalone.py`（资源 base64 化 + SDK 内联 + PDF 链接改写为运行时 Blob）
+3. **发布正式站**：用 WorkBuddy 的「发布为应用」把整个目录发到上面那个 `kuangye-homepage.app.workbuddy.host`（同一应用覆盖发布，链接不变）
+4. **（可选）GitHub 镜像**：`python deploy_pages.py` 提交到 `EasonQuantico/EasonQuantico`，Pages 约 20 秒重建；镜像无法连云端，仅供离线浏览
 
-> 说明：本地 git 在非交互环境可能因凭证助手或传输问题失败（`fetch-pack: invalid index-pack output`），因此部署改用 GitHub Git Data API，只依赖已登录的 `gh` CLI。
+> 说明：本地 git 在非交互环境可能因凭证助手或传输问题失败（`fetch-pack: invalid index-pack output`），因此镜像部署改用 GitHub Git Data API，只依赖已登录的 `gh` CLI。
 
 ## QA 方法
 

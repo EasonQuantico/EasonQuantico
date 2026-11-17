@@ -599,6 +599,26 @@ body::after{
 .trow .v.up{color:#7dff6a}
 .trow .v.dn{color:#ff7a6e}
 
+/* 非正式地址提示条：GitHub Pages / workbuddy.link iframe 等镜像无法连云端，只显示本机副本 */
+.mirror-tip{
+  position:fixed;left:14px;bottom:14px;z-index:70;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 11px;border:1px solid rgba(225,6,0,.4);
+  background:rgba(10,7,8,.92);color:var(--dim);text-decoration:none;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;line-height:1;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:border-color .2s,color .2s;
+}
+.mirror-tip[hidden]{display:none}
+.mirror-tip i{flex:none;width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink 1.6s infinite}
+.mirror-tip b{color:var(--red-hi);font-weight:700;letter-spacing:.06em}
+.mirror-tip span{color:var(--mute)}
+.mirror-tip:hover{border-color:var(--red);color:var(--ink)}
+@media (max-width:560px){
+  .mirror-tip{left:8px;bottom:8px;gap:6px;padding:6px 9px;font-size:8.5px}
+  .mirror-tip span{display:none}
+}
+
 /* ---------- metrics strip ---------- */
 .metrics{position:relative;z-index:1;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);background:rgba(9,6,7,.55)}
 .metrics-in{
@@ -1849,7 +1869,12 @@ body::after{
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<a class="mirror-tip" id="mirrorTip" hidden
+   href="https://kuangye-homepage.app.workbuddy.host/?sharecode=I54PCBNTF6">
+  <i></i><b>非正式访问地址</b><span>内容以正式站为准 · 点此前往</span>
+</a>
+
+<script src="cloud-sdk.js"></script>
 <script>
 (function(){
   "use strict";
@@ -3531,19 +3556,50 @@ body::after{
      5 · 云端同步 / 分享动态
      ============================================================ */
   var WB_CFG = {
+    /* 与站点同源：https://kuangye-homepage.app.workbuddy.host —— 云端只放行这个 Origin，
+       换成 GitHub Pages / workbuddy.link 的 iframe 都会因跨域被拒（见 README） */
     endpoint: "https://kuangye-homepage.app.workbuddy.host",
     publishableKey: "wbpk_fPA1lxoUQciQJFgVIpo0ud_igd41BQpuYPUoXLTXpsDvz6Q3br859A8"
   };
-  var cloud = null, cloudReady = false;
-  try {
-    if (window.WorkBuddyCloud && WorkBuddyCloud.createWorkBuddyCloud) {
-      cloud = WorkBuddyCloud.createWorkBuddyCloud({ endpoint: WB_CFG.endpoint, publishableKey: WB_CFG.publishableKey });
-      cloudReady = true;
-    }
-  } catch(e){ cloud = null; cloudReady = false; }
+  var CLOUD_SDK_FALLBACK = "https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js";
+  var cloud = null, cloudReady = false, cloudBooted = false;
   function setCloudState(txt, bad){
     var el = document.getElementById("cloudState");
     if (el) { el.textContent = "CLOUD · " + txt; el.style.color = bad ? "#ff8a80" : ""; }
+  }
+  function createCloudClient(){
+    if (cloud) { return cloud; }
+    if (!(window.WorkBuddyCloud && WorkBuddyCloud.createWorkBuddyCloud)) { return null; }
+    try {
+      cloud = WorkBuddyCloud.createWorkBuddyCloud({ endpoint: WB_CFG.endpoint, publishableKey: WB_CFG.publishableKey });
+      cloudReady = true;
+    } catch(e){ cloud = null; cloudReady = false; }
+    return cloud;
+  }
+  createCloudClient();
+  /* SDK 已内置为同目录 cloud-sdk.js；万一缺失再兜底走 CDN，避免整站降级成本地模式 */
+  function ensureCloudSdk(cb){
+    if (window.WorkBuddyCloud) { createCloudClient(); cb(); return; }
+    setCloudState("LOADING…");
+    var s = document.createElement("script");
+    s.async = true;
+    s.src = CLOUD_SDK_FALLBACK;
+    s.onload = function(){ createCloudClient(); cb(); };
+    s.onerror = function(){ cloudReady = false; setCloudState("OFFLINE · 本地模式", true); cb(); };
+    document.head.appendChild(s);
+  }
+  function cloudOfflineHint(){
+    setCloudState("OFFLINE · 本地模式", true);
+    noteHint("云端未连接 · 改动只存本机，请用正式地址 kuangye-homepage.app.workbuddy.host 访问");
+  }
+  function bootCloud(){
+    if (cloudBooted) { return; }
+    cloudBooted = true;
+    ensureCloudSdk(function(){
+      if (!cloudReady) { cloudOfflineHint(); return; }
+      cloudReload();
+      noteCloudPull();
+    });
   }
 
   /* ---- 游戏区上方的无线电提示卡：后台可编辑 · 多条堆叠 · 自动循环 ---- */
@@ -3740,10 +3796,10 @@ body::after{
       .then(function(res){
         if (res && res.error) { throw res.error; }
         var rows = (res && res.data) || [];
-        if (!rows.length) { return; }
+        if (!rows.length) { noteCloudPush(); return; }   /* 首次：把当前提示推上云，多设备从此一致 */
         noteAcceptRow(rows[0]);
       })
-      .catch(function(){});
+      .catch(function(){ cloudOfflineHint(); });
   }
   function noteCloudPush(ts){
     if (!cloudReady) { return; }
@@ -3966,8 +4022,7 @@ body::after{
     if (bNext) { bNext.addEventListener("click", deckNext); }
     if (bPrev) { bPrev.addEventListener("click", deckPrev); }
     renderDeck();
-    cloudReload();
-    noteCloudPull();
+    bootCloud();
   }
 
   /* ============================================================
@@ -4121,8 +4176,8 @@ body::after{
   function noteCommitUI(items, gap, msg){
     noteCommit(items, gap, null);
     noteAdminSync();
-    noteHint((noteCloudOK ? "云端已连接 · " : "") + msg);
-    if (cloudMode) { noteCloudPush(); }
+    if (cloudReady) { noteCloudPush(); }
+    else { noteHint(msg + " · 云端未连接，仅本机生效"); }
   }
   if (fNote) {
     fNote.addEventListener("input", function(){ noteHint("未保存"); });
@@ -4203,7 +4258,7 @@ body::after{
       if (!b) { return; }
       var i = parseInt(b.dataset.i, 10), act = b.dataset.act;
       if (act === "edit") { fillForm(shares[i], i); renderAdminList(); return; }
-      if (cloudMode) {
+      if (cloudReady) {
         var row = shares[i];
         if (!row || row.id == null) { return; }
         if (act === "del") {
@@ -4233,7 +4288,7 @@ body::after{
       var obj = { tag: fTag.value.trim() || "动态", date: fDate.value.trim(), title: title,
                   desc: fDesc.value.trim(), link: fLink.value.trim(), linkText: fLink.value.trim() ? "查看链接" : "",
                   mediaData: pendingMedia ? pendingMedia.data : "", mediaKind: pendingMedia ? pendingMedia.kind : "" };
-      if (cloudMode) {
+      if (cloudReady) {
         if (editIdx >= 0 && shares[editIdx] && shares[editIdx].id != null) {
           cloud.database.from("share_posts").update(itemToRow(obj, shares[editIdx].so)).eq("id", shares[editIdx].id)
             .then(function(res){ if (res && res.error) { adminFail(res.error); return; } resetForm(); cloudReload(); })
@@ -4255,7 +4310,7 @@ body::after{
     document.getElementById("fReset").addEventListener("click", resetForm);
     document.getElementById("aDefaults").addEventListener("click", function(){
       if (!window.confirm("确定恢复默认分享内容？当前修改将被覆盖（云端 + 本地）。")) { return; }
-      if (cloudMode) {
+      if (cloudReady) {
         cloud.database.from("share_posts").delete().gt("id", 0)
           .then(function(res){
             if (res && res.error) { throw res.error; }
@@ -4296,7 +4351,7 @@ body::after{
           if (!Array.isArray(data)) { throw new Error("format"); }
           data = data.filter(function(x){ return x && typeof x.title === "string"; });
           if (!data.length) { throw new Error("empty"); }
-          if (cloudMode) {
+          if (cloudReady) {
             var rows = data.map(function(it, i){ return itemToRow(it, data.length * 10 - i * 10); });
             cloud.database.from("share_posts").delete().gt("id", 0)
               .then(function(res){
@@ -4328,6 +4383,11 @@ body::after{
   function openAdmin(){
     renderAdminList();
     if (typeof noteFormFill === "function") { noteFormFill(); }
+    if (cloudReady) {
+      noteHint("云端已连接 · 改动会同步到所有设备");
+    } else {
+      noteHint("云端未连接 · 改动仅本机生效，请用正式地址 kuangye-homepage.app.workbuddy.host 访问");
+    }
     admin.classList.add("open");
     admin.setAttribute("aria-hidden", "false");
   }
@@ -4384,6 +4444,15 @@ body::after{
       resetForm();
     }
   });
+})();
+</script>
+<script>
+/* ---------- 非正式地址提示：只有正式域名才能连云端，其余镜像只读本地副本 ---------- */
+(function(){
+  var tip = document.getElementById("mirrorTip");
+  if (!tip) { return; }
+  var CANON_HOST = "kuangye-homepage.app.workbuddy.host";
+  if (location.hostname && location.hostname !== CANON_HOST) { tip.hidden = false; }
 })();
 </script>
 </body>

@@ -27,6 +27,7 @@ TOKEN = subprocess.check_output(["gh", "auth", "token"], text=True).strip()
 # (本地文件, 仓库内路径)
 FILES = [
     ("index.html", "index.html"),
+    ("cloud-sdk.js", "cloud-sdk.js"),
     ("README.md", "README.md"),
     ("匡烨-个人主页-单文件版.html", "standalone.html"),
     ("deploy_pages.py", "deploy_pages.py"),
