@@ -376,69 +376,81 @@ body::after{
 }
 .sim-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 
-/* 车队无线电弹窗：深色字幕卡 + 红色车手名 + 白色 RADIO + 车号 + 盾标 */
+/* 车队无线电字幕卡：仿 F1 转播图形 —— 头盔特写 + 红色车手名 + 白色 RADIO + 大号车号 + 盾标 */
 .sim-radio{
   position:absolute;left:6px;bottom:6px;z-index:4;
-  width:min(52%,200px);padding:4px 7px 5px;
-  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:end;gap:1px 6px;
+  width:min(64%,244px);aspect-ratio:396/250;container-type:size;overflow:hidden;
   background:
-    linear-gradient(140deg,rgba(225,6,0,.16) 0%,rgba(225,6,0,0) 46%),
-    linear-gradient(158deg,rgba(26,19,21,.97) 0%,rgba(9,6,7,.97) 58%,rgba(4,3,4,.96) 100%);
-  border:1px solid rgba(225,6,0,.44);border-left:2px solid var(--red);
-  box-shadow:0 22px 46px -26px rgba(0,0,0,.98),inset 0 1px 0 rgba(255,255,255,.06);
+    radial-gradient(88% 122% at 6% 4%,rgba(104,90,96,.34) 0%,rgba(28,22,25,0) 58%),
+    linear-gradient(104deg,rgba(225,6,0,.22) 0%,rgba(225,6,0,.05) 26%,rgba(225,6,0,0) 48%),
+    linear-gradient(166deg,#181215 0%,#0d090b 46%,#060405 100%);
+  box-shadow:0 18px 44px -22px #000,inset 0 1px 0 rgba(255,255,255,.055);
   font-family:var(--mono);pointer-events:none;
-  opacity:0;transform:translateY(9px) scale(.985);transform-origin:left bottom;
+  opacity:0;transform:translateY(8px) scale(.985);transform-origin:left bottom;
   transition:opacity .16s ease,transform .26s cubic-bezier(.16,.8,.28,1);
 }
+/* 左沿红色光条 + 斜向高光 */
+.sim-radio::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;z-index:3;
+  background:linear-gradient(180deg,rgba(225,6,0,0),var(--red) 16%,var(--red) 84%,rgba(225,6,0,0));
+}
 .sim-radio::after{
-  content:"";position:absolute;right:0;top:0;width:10px;height:10px;
-  background:linear-gradient(225deg,rgba(225,6,0,.85),rgba(225,6,0,0));
+  content:"";position:absolute;inset:0;z-index:1;
+  background:linear-gradient(118deg,rgba(255,255,255,0) 45%,rgba(255,255,255,.05) 51%,rgba(255,255,255,0) 59%);
 }
 .sim-radio.show{opacity:1;transform:none}
 .sim-view.ov .sim-radio{opacity:0}
-.rd-top{
-  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:6px;
-  padding-bottom:2px;margin-bottom:1px;border-bottom:1px solid rgba(246,240,234,.12);
-  font-size:6.5px;letter-spacing:.17em;text-transform:uppercase;color:rgba(246,240,234,.44);
+
+/* 左上头盔特写（矢量剪影 + 径向遮罩，替代原图照片） */
+.rd-shot{
+  position:absolute;left:-20%;top:-38%;width:66%;z-index:0;
+  opacity:.72;filter:contrast(1.08) brightness(.84);
+  -webkit-mask-image:linear-gradient(124deg,#000 0%,#000 60%,rgba(0,0,0,.6) 76%,transparent 92%);
+  mask-image:linear-gradient(124deg,#000 0%,#000 60%,rgba(0,0,0,.6) 76%,transparent 92%);
 }
-.rd-live{display:inline-flex;align-items:center;gap:3px;color:var(--red-hi)}
-.rd-live i{width:3px;height:3px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+.rd-shot svg{display:block;width:100%;height:auto}
+
+/* 车手名（红）+ RADIO（白），整体右上对齐 */
+.rd-name{
+  position:absolute;right:5.5%;top:6.5%;z-index:2;text-align:right;line-height:.8;
+  font-family:"Arial Narrow","Helvetica Neue",Impact,"Arial Black",Arial,sans-serif;
+}
+.rd-name b{
+  display:block;font-size:9.8cqw;font-weight:900;letter-spacing:-.012em;
+  color:#ff2418;text-transform:uppercase;text-shadow:0 .05em .16em rgba(225,6,0,.34);
+}
+.rd-name em{
+  display:block;font-style:normal;font-size:13.6cqw;font-weight:900;letter-spacing:-.032em;
+  color:#fbf7f1;margin-top:-.055em;
+}
+
+/* 左下大号车号 */
 .rd-num{
-  font-size:26px;font-weight:800;line-height:.8;letter-spacing:-.07em;
-  color:var(--red);font-variant-numeric:tabular-nums;
-  font-style:italic;transform:skewX(-6deg);text-shadow:0 0 18px rgba(225,6,0,.42);
+  position:absolute;left:5%;bottom:26.5%;z-index:2;
+  font-family:"Arial Narrow","Helvetica Neue",Impact,"Arial Black",Arial,sans-serif;
+  font-size:24cqw;font-weight:900;line-height:.7;letter-spacing:-.05em;
+  color:#ff2418;font-variant-numeric:tabular-nums;text-shadow:0 .04em .18em rgba(225,6,0,.3);
 }
-.rd-id{display:flex;flex-direction:column;align-items:flex-end;min-width:0;line-height:1}
-.rd-id b{
-  font-size:19px;font-weight:800;font-style:italic;letter-spacing:-.01em;color:var(--red);
-  transform:skewX(-6deg);text-transform:uppercase;text-shadow:0 0 16px rgba(225,6,0,.34);
+/* 右下盾标 */
+.rd-badge{
+  position:absolute;right:6%;bottom:26%;z-index:2;width:14.6cqw;height:auto;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.82));
 }
-.rd-id em{
-  font-style:normal;font-size:11px;font-weight:800;letter-spacing:.02em;color:#f8f4ee;
-  line-height:1.05;transform:skewX(-6deg);text-transform:uppercase;
-}
-.rd-badge{width:15px;height:17px;margin-bottom:1px;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
+/* 底部字幕带 */
 .rd-msg{
-  grid-column:1/-1;display:flex;align-items:center;gap:4px;
-  margin-top:2px;padding-top:2px;border-top:1px solid rgba(225,6,0,.30);
-  font-size:8.5px;line-height:1.25;letter-spacing:.01em;color:#f8f4ee;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  position:absolute;left:0;right:0;bottom:0;z-index:3;height:23%;
+  display:flex;align-items:center;gap:.42em;padding:0 5%;
+  background:linear-gradient(90deg,rgba(225,6,0,.26) 0%,rgba(11,8,9,.95) 38%,rgba(8,6,7,.93) 100%);
+  border-top:1px solid rgba(225,6,0,.34);
+  font-family:var(--mono);font-size:max(7px,4.6cqw);line-height:1;letter-spacing:.015em;
+  color:#f8f4ee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.rd-msg::before{content:"“";color:var(--red-hi);font-size:11px;line-height:1;font-weight:700}
+.rd-msg::before{content:"\201C";color:var(--red-hi);font-size:1.25em;line-height:1;font-weight:700;flex:none}
+
+/* 卡片压到排行榜时，排行榜淡出让位（避免两层内容叠着看不清） */
+.sim-view.rd-over .sim-lb{opacity:.22}
 @media (max-width:640px){
-  .sim-radio{left:5px;bottom:5px;width:min(58%,178px);padding:4px 6px 5px}
-  .rd-num{font-size:22px}
-  .rd-id b{font-size:16px}
-  .rd-id em{font-size:9.5px}
-  .rd-badge{width:13px;height:15px}
-  .rd-msg{font-size:7px}
-}
-/* 极窄画面：底部左侧会被排行榜占满，弹窗改挂右上（避开赛车与最小地图） */
-@media (max-width:480px){
-  .sim-radio{
-    left:auto;right:5px;bottom:auto;top:27px;
-    width:min(56%,168px);transform:translateY(-7px) scale(.985);transform-origin:right top;
-  }
+  .sim-radio{left:5px;bottom:5px}
 }
 .sim-ov{
   position:absolute;inset:0;z-index:3;display:grid;place-content:center;justify-items:center;gap:8px;
@@ -1275,14 +1287,31 @@ body::after{
             <span class="mb" id="simMode">AUTO</span>
           </div>
 
-          <!-- 车队无线电弹窗（模仿转播字幕卡） -->
+          <!-- 车队无线电弹窗（仿 F1 转播图形） -->
           <div class="sim-radio" id="simRadio" aria-hidden="true">
-            <div class="rd-top">
-              <span class="rd-live"><i></i>TEAM RADIO</span>
-              <span class="rd-car">CAR 16 · SF-24</span>
+            <div class="rd-shot">
+              <svg viewBox="0 0 130 112" aria-hidden="true">
+                <defs>
+                  <linearGradient id="rdHelm" x1=".1" y1="0" x2=".86" y2="1">
+                    <stop offset="0" stop-color="#a89299"/>
+                    <stop offset=".26" stop-color="#635359"/>
+                    <stop offset=".68" stop-color="#261e21"/>
+                    <stop offset="1" stop-color="#0e0a0c"/>
+                  </linearGradient>
+                  <linearGradient id="rdVisor" x1="0" y1="0" x2=".7" y2="1">
+                    <stop offset="0" stop-color="#251d20"/>
+                    <stop offset="1" stop-color="#050304"/>
+                  </linearGradient>
+                </defs>
+                <path d="M6 112C-2 84 2 48 26 27 48 8 88 10 104 32c14 19 12 47 1 66-7 11-14 14-21 14z" fill="url(#rdHelm)"/>
+                <path d="M18 57c19-17 55-19 78-4 5 12-1 25-10 30-19-9-47-9-66 0-9-9-10-19-2-26z" fill="url(#rdVisor)"/>
+                <path d="M20 47c21-13 54-13 74-1 2 2 1 6-2 6-21-10-49-10-69 0-2 0-4-4-3-5z" fill="#c0aeb2" opacity=".34"/>
+                <path d="M8 104c14 7 48 9 68 2" stroke="#080506" stroke-width="4" fill="none" opacity=".6"/>
+                <path d="M30 22c14-9 36-10 52-3" stroke="#b9a3a8" stroke-width="2.4" fill="none" opacity=".28" stroke-linecap="round"/>
+              </svg>
             </div>
+            <div class="rd-name"><b>YIP</b><em>RADIO</em></div>
             <span class="rd-num">16</span>
-            <span class="rd-id"><b>YIP</b><em>RADIO</em></span>
             <svg class="rd-badge" viewBox="0 0 26 30" aria-hidden="true">
               <path d="M13 1.8 2.7 5.2v10.1c0 6.1 4.3 10.5 10.3 13 6-2.5 10.3-6.9 10.3-13V5.2L13 1.8Z"
                     fill="#f2c200" stroke="#100c0d" stroke-width="1.3" stroke-linejoin="round"/>
@@ -2550,6 +2579,20 @@ body::after{
       }, 950);
     }
 
+    /* 字幕卡尺寸：优先贴在排行榜下方，画面太矮时按比例收缩 */
+    function fitRadio(){
+      if (!radioEl || !view) { return; }
+      var vw = view.clientWidth, vh = view.clientHeight;
+      var lb = document.getElementById("simLb");
+      var lbB = lb ? (lb.offsetTop + lb.offsetHeight) : 0;
+      var avail = vh - 6 - (lbB > 0 ? lbB + 6 : 0);
+      var w = Math.min(214, vw * 0.46, avail / 0.6313);
+      w = Math.max(128, Math.min(w, vw - 12));
+      radioEl.style.width = Math.round(w) + "px";
+      var top = vh - 6 - Math.round(w * 250 / 396);
+      view.classList.toggle("rd-over", lbB > 0 && top < lbB - 8);
+    }
+
     /* 车队无线电：撞车 / 冲出赛道时弹出字幕卡（含冷却，避免连环刷屏） */
     var RADIO_TXT = "I am stupid...";
     function radio(msg){
@@ -2557,6 +2600,7 @@ body::after{
       var t0 = now();
       if (t0 < radioCool) { return; }
       radioCool = t0 + 3400;
+      fitRadio();
       if (radioMsgEl) { radioMsgEl.textContent = msg; }
       radioEl.classList.add("show");
       if (radioTimer) { clearTimeout(radioTimer); }
@@ -3235,6 +3279,7 @@ body::after{
       cvs.height = Math.round(cvs.width * 9 / 16);
       sx = cvs.width / LW;
       sy = cvs.height / LH;
+      fitRadio();
     }
 
     for (var ci = 0; ci < TEAMS.length; ci++){ cars.push(makeCar(ci)); }
