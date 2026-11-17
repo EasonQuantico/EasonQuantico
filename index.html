@@ -296,22 +296,103 @@ body::after{
 .hud-live.paused i{animation:none;opacity:.45}
 /* ---------- SIM · F1 赛道模拟器 ---------- */
 .sim{position:relative;border-bottom:1px solid var(--line-soft);background:#080607}
-/* 游戏区上方的提示框（后台可编辑） */
-.sim-note{
-  position:relative;display:flex;align-items:center;gap:8px;
-  padding:7px 11px 7px 12px;border-bottom:1px solid var(--line-soft);
-  background:linear-gradient(90deg,rgba(225,6,0,.16),rgba(10,7,8,.94) 46%,rgba(10,7,8,.98));
-  font-family:var(--mono);font-size:9.5px;line-height:1.35;letter-spacing:.02em;
+/* 游戏区上方的车队无线电卡片（仿 F1 转播图形）：后台可编辑 · 多条堆叠 · 自动循环 */
+.sim-deck{
+  position:relative;padding:28px 9px 9px;
+  background:linear-gradient(180deg,#0b0809,#070506);
+  border-bottom:1px solid var(--line-soft);
 }
-.sim-note::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red)}
-.sim-note .sn-tag{
-  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
-  font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi);
+.sim-stack{position:relative;height:74px;cursor:pointer}
+.sc-defs{position:absolute;width:0;height:0;overflow:hidden}
+/* 单张卡片：与右下角无线电弹窗同一套视觉语言（头盔 / YIP RADIO / 车号 / 盾标 / 字幕带） */
+.sim-card{
+  position:absolute;inset:0;overflow:hidden;
+  background:
+    radial-gradient(70% 150% at 8% 0%,rgba(104,90,96,.30) 0%,rgba(28,22,25,0) 62%),
+    linear-gradient(104deg,rgba(225,6,0,.22) 0%,rgba(225,6,0,.05) 30%,rgba(225,6,0,0) 52%),
+    linear-gradient(166deg,#181215 0%,#0d090b 46%,#060405 100%);
+  box-shadow:0 -1px 0 rgba(255,255,255,.10),0 14px 34px -20px #000,inset 0 1px 0 rgba(255,255,255,.055);
+  font-family:var(--mono);
+  opacity:0;transform:translateY(-14px) scale(.9);transform-origin:50% 100%;
+  transition:transform .5s cubic-bezier(.22,.72,.2,1),opacity .38s ease;
+  will-change:transform,opacity;
 }
-.sim-note .sn-tag i{width:4px;height:4px;border-radius:50%;background:var(--red);animation:blink 1.6s infinite}
-.sim-note .sn-tx{
-  flex:1 1 auto;min-width:0;color:rgba(246,240,234,.9);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.sim-card::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:2px;z-index:4;
+  background:linear-gradient(180deg,rgba(225,6,0,0),var(--red) 16%,var(--red) 84%,rgba(225,6,0,0));
+}
+.sim-card::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(118deg,rgba(255,255,255,0) 45%,rgba(255,255,255,.05) 51%,rgba(255,255,255,0) 59%);
+}
+.sc-top{position:absolute;left:0;right:0;top:0;bottom:29px;overflow:hidden}
+/* 车手头盔：小尺寸完整剪影（左侧），比裁切特写更易辨认 */
+.sc-helm{
+  position:absolute;left:7px;top:3px;width:36px;z-index:0;
+  opacity:.92;filter:contrast(1.05) brightness(.92);
+  -webkit-mask-image:linear-gradient(96deg,#000 76%,transparent 100%);
+  mask-image:linear-gradient(96deg,#000 76%,transparent 100%);
+}
+.sc-helm svg{display:block;width:100%;height:auto}
+.sc-id{
+  position:absolute;left:50px;top:5px;z-index:2;line-height:.82;
+  font-family:"Arial Narrow","Helvetica Neue",Impact,"Arial Black",Arial,sans-serif;
+}
+/* 非首张卡只露出卡片边缘，不显示文字（避免叠影） */
+.sim-card .sc-top,.sim-card .sc-band{transition:opacity .3s ease}
+.sim-card:not(.is-front) .sc-top,.sim-card:not(.is-front) .sc-band{opacity:0}
+.sc-id b{
+  display:block;font-size:clamp(9px,.72vw,10.6px);font-weight:900;letter-spacing:-.01em;
+  color:#ff2418;text-transform:uppercase;text-shadow:0 .05em .14em rgba(225,6,0,.34);
+}
+.sc-id em{
+  display:block;font-style:normal;font-size:clamp(11.5px,.92vw,13.4px);font-weight:900;
+  letter-spacing:-.03em;color:#fbf7f1;margin-top:-.05em;
+}
+.sc-tail{position:absolute;right:7px;top:4px;z-index:2;display:flex;align-items:center;gap:6px}
+.sc-num{
+  font-family:"Arial Narrow","Helvetica Neue",Impact,"Arial Black",Arial,sans-serif;
+  font-size:clamp(18px,1.55vw,22px);font-weight:900;line-height:.8;letter-spacing:-.05em;
+  color:#ff2418;font-variant-numeric:tabular-nums;text-shadow:0 .04em .16em rgba(225,6,0,.3);
+}
+.sc-badge{width:14px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.8))}
+/* 底部字幕带 */
+.sc-band{
+  position:absolute;left:0;right:0;bottom:0;height:29px;z-index:3;
+  display:flex;align-items:center;gap:.4em;padding:0 7px;
+  background:linear-gradient(90deg,rgba(225,6,0,.26) 0%,rgba(11,8,9,.95) 38%,rgba(8,6,7,.93) 100%);
+  border-top:1px solid rgba(225,6,0,.34);
+}
+.sc-band::before{
+  content:"\201C";flex:none;font-size:15px;line-height:1;font-weight:700;
+  color:var(--red-hi);opacity:.9;
+}
+.sc-tx{
+  flex:1 1 auto;min-width:0;
+  font-size:clamp(8px,.62vw,9.6px);line-height:1.32;letter-spacing:.015em;color:#f8f4ee;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;word-break:break-word;
+}
+.sc-idx{
+  flex:none;font-size:6.6px;letter-spacing:.1em;color:rgba(246,240,234,.42);
+  font-variant-numeric:tabular-nums;
+}
+/* 循环进度（1px 发丝线，随循环间隔走完） */
+.sim-prog{position:absolute;left:0;right:0;bottom:0;height:1px;overflow:hidden;background:rgba(246,240,234,.06)}
+.sim-prog i{display:block;height:100%;width:0;transform-origin:left;
+  background:linear-gradient(90deg,rgba(225,6,0,.35),var(--red-hi));animation:sdProg linear forwards}
+@keyframes sdProg{from{width:0}to{width:100%}}
+@media (max-width:560px){
+  .sim-deck{padding:27px 7px 8px}
+  .sim-stack{height:70px}
+  .sc-top{bottom:28px}
+  .sc-helm{left:6px;top:3px;width:34px}
+  .sc-id{left:47px}
+  .sc-badge{width:12.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .sim-card{transition:none}
+  .sim-prog i{animation:none}
 }
 .sim-view{position:relative;aspect-ratio:16/9;overflow:hidden;isolation:isolate}
 .sim-view canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
@@ -951,7 +1032,31 @@ body::after{
 .admin-sec-t{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi)}
 .note-fld textarea{min-height:56px}
 .note-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note-row .btn[hidden]{display:none}
 .note-hint{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--mute)}
+/* 提示卡列表（后台：多条堆叠 / 排序 / 删除） */
+.note-list{display:grid;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);max-height:190px;overflow:auto}
+.note-list:empty{display:none}
+.note-item{display:flex;align-items:center;gap:6px;background:var(--panel);padding:7px 9px}
+.note-item.on{background:rgba(225,6,0,.14);box-shadow:inset 2px 0 0 var(--red)}
+.note-item .ni-p{flex:none;width:13px;font-family:var(--mono);font-size:8.5px;letter-spacing:.04em;color:var(--red-hi)}
+.note-item .ni-t{
+  flex:1;min-width:0;font-family:var(--mono);font-size:10px;line-height:1.42;color:var(--dim);
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-word;
+}
+.note-item button{
+  flex:none;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;padding:3px 6px;
+  border:1px solid var(--line-soft);background:transparent;color:var(--dim);cursor:pointer;transition:.15s;
+}
+.note-item button:hover{border-color:var(--red);color:var(--red-hi)}
+.note-item button.del:hover{border-color:#ff7a6e;color:#ff7a6e}
+.note-item.empty{justify-content:center;padding:12px;font-family:var(--mono);font-size:9.5px;color:var(--mute)}
+.note-lb{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.note-sel{
+  font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:5px 6px;outline:none;
+  background:rgba(246,240,234,.03);color:var(--ink);border:1px solid var(--line-soft);cursor:pointer;
+}
+.note-sel:focus{border-color:var(--red)}
 .admin-rule{height:1px;background:var(--line-soft);margin:0 0 2px}
 .media-pick{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .media-pick .hint{font-family:var(--mono);font-size:9px;color:var(--mute);letter-spacing:.04em}
@@ -1114,15 +1219,28 @@ body::after{
     </div>
     <div class="admin-body">
       <div class="admin-sec">
-        <span class="admin-sec-t">赛道提示框 / Race Note</span>
+        <span class="admin-sec-t">赛道提示卡 / Race Notes · 堆叠 + 循环</span>
         <div class="fld note-fld">
-          <label>游戏区上方提示文字（≤120 字，保存后立即生效）</label>
+          <label id="fNoteLb">新增一条提示（≤120 字，可多条叠加，前台自动循环播放）</label>
           <textarea id="fNote" maxlength="120" placeholder="例如：本场为街道赛，注意 3 号弯出弯速度。"></textarea>
         </div>
         <div class="note-row">
-          <button class="btn btn-primary" id="fNoteSave" type="button">保存提示</button>
+          <button class="btn btn-primary" id="fNoteSave" type="button">添加提示</button>
+          <button class="btn btn-ghost" id="fNoteCancel" type="button" hidden>取消编辑</button>
           <button class="btn btn-ghost" id="fNoteReset" type="button">恢复默认</button>
           <span class="note-hint" id="fNoteHint">—</span>
+        </div>
+        <div class="note-list" id="fNoteList"></div>
+        <div class="note-row">
+          <span class="note-lb">循环间隔</span>
+          <select class="note-sel" id="fNoteGap">
+            <option value="3000">3 秒</option>
+            <option value="4200">4.2 秒</option>
+            <option value="6000">6 秒</option>
+            <option value="9000">9 秒</option>
+            <option value="0">不自动轮播</option>
+          </select>
+          <span class="note-hint">前台点击卡片可手动切换下一条</span>
         </div>
       </div>
       <div class="admin-rule"></div>
@@ -1266,9 +1384,24 @@ body::after{
       </div>
 
       <div class="sim" id="sim">
-        <div class="sim-note" id="simNote" role="status" aria-live="polite">
-          <span class="sn-tag"><i></i>Race Note</span>
-          <span class="sn-tx" id="simNoteTx">按 Play 接管赛车 · ← → 转向 · ↑ 加速 · ↓ 制动</span>
+        <!-- 车队无线电卡片组：多条堆叠 + 自动循环，文案由后台维护 -->
+        <div class="sim-deck" id="simDeck" role="group" aria-label="车队无线电提示，多条自动循环，点击切换下一条">
+          <svg class="sc-defs" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="scHelm" x1=".1" y1="0" x2=".86" y2="1">
+                <stop offset="0" stop-color="#a89299"/>
+                <stop offset=".26" stop-color="#635359"/>
+                <stop offset=".68" stop-color="#261e21"/>
+                <stop offset="1" stop-color="#0e0a0c"/>
+              </linearGradient>
+              <linearGradient id="scVisor" x1="0" y1="0" x2=".7" y2="1">
+                <stop offset="0" stop-color="#251d20"/>
+                <stop offset="1" stop-color="#050304"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="sim-stack" id="simStack"></div>
+          <div class="sim-prog" aria-hidden="true"><i id="simProg"></i></div>
         </div>
         <div class="sim-view" id="simView">
           <canvas id="simCanvas" width="960" height="540" tabindex="-1"
@@ -3413,73 +3546,211 @@ body::after{
     if (el) { el.textContent = "CLOUD · " + txt; el.style.color = bad ? "#ff8a80" : ""; }
   }
 
-  /* ---- 游戏区提示框：后台可编辑（本地立即生效 + 云端带版本号同步） ---- */
-  var LS_NOTE = "ky_sim_note_v1";
+  /* ---- 游戏区上方的无线电提示卡：后台可编辑 · 多条堆叠 · 自动循环 ---- */
+  var LS_NOTE = "ky_sim_notes_v2";
   var NOTE_TAG = "__simnote";
-  var NOTE_DEFAULT = "按 Play 接管赛车 · ← → 转向 · ↑ 加速 · ↓ 制动";
-  var noteTxEl = document.getElementById("simNoteTx");
-  var noteBoxEl = document.getElementById("simNote");
-  var noteTs = 0, noteCloudOK = false;
+  var NOTE_GAP_DEF = 4200;
+  var NOTE_MAX = 8;
+  var NOTE_DEFAULT = [
+    "按 Play 接管赛车 · ← → 转向 · ↑ 加速 · ↓ 制动",
+    "冲出赛道或与其他赛车碰撞时，车队无线电会弹出提示",
+    "每圈刷新随机赛道 · 冲线后刷新 BEST 最快圈速"
+  ];
+  var noteState = { items: NOTE_DEFAULT.slice(), gap: NOTE_GAP_DEF, ts: 0 };
+  var noteDeck = document.getElementById("simDeck");
+  var noteStack = document.getElementById("simStack");
+  var noteProg = document.getElementById("simProg");
+  var noteCards = [], noteCur = 0, noteTimer = 0, noteHover = false;
+  var noteCloudOK = false;
 
+  function noteEsc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" })[c];
+    });
+  }
+  function noteReduce(){
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch(e){ return false; }
+  }
+  /* 兼容旧版（纯文本 / {t,ts}）与新版的统一解析 */
+  function noteNorm(raw){
+    var out = { items: [], gap: NOTE_GAP_DEF, ts: 0 };
+    if (raw == null) { return out; }
+    var o = raw;
+    if (typeof o === "string") {
+      var s = o.trim();
+      if (!s) { return out; }
+      if (s.charAt(0) === "{") { try { o = JSON.parse(s); } catch(e){ o = s; } }
+      else { out.items.push(s); return out; }
+    }
+    if (typeof o === "string") { out.items.push(o.trim()); return out; }
+    if (Array.isArray(o)) { o = { items: o }; }
+    if (!o || typeof o !== "object") { return out; }
+    var arr = o.items || [];
+    if (typeof arr === "string") { arr = arr.split("\n"); }
+    if (Array.isArray(arr)) {
+      arr.forEach(function(x){
+        var t = (typeof x === "string") ? x : (x && x.t);
+        t = (t == null ? "" : String(t)).trim();
+        if (t) { out.items.push(t.slice(0, 120)); }
+      });
+    }
+    out.items = out.items.slice(0, NOTE_MAX);
+    var g = parseInt(o.gap, 10);
+    out.gap = (g >= 0) ? Math.min(g, 60000) : NOTE_GAP_DEF;
+    out.ts = parseInt(o.ts, 10) || 0;
+    return out;
+  }
   function noteLocal(){
     try {
       var raw = localStorage.getItem(LS_NOTE);
-      if (!raw) { return null; }
-      if (raw.charAt(0) === "{") {
-        var o = JSON.parse(raw);
-        if (o && typeof o.t === "string") { return { t: o.t, ts: Number(o.ts) || 0 }; }
-      }
-      return { t: raw, ts: 0 };
+      return raw ? noteNorm(raw) : null;
     } catch(e){ return null; }
   }
-  function noteGet(){
-    var l = noteLocal();
-    return (l && l.t && l.t.trim()) ? l.t : NOTE_DEFAULT;
+  function noteSaveLocal(){
+    try { localStorage.setItem(LS_NOTE, JSON.stringify(noteState)); } catch(e){}
   }
-  function noteApply(txt){
-    txt = (txt == null ? "" : String(txt)).trim() || NOTE_DEFAULT;
-    if (noteTxEl) { noteTxEl.textContent = txt; }
-    if (noteBoxEl) { noteBoxEl.title = txt; }
-    return txt;
-  }
-  function noteSet(txt, ts){
-    var v = noteApply(txt);
-    noteTs = Number(ts) || Date.now();
-    try { localStorage.setItem(LS_NOTE, JSON.stringify({ t: v, ts: noteTs })); } catch(e){}
-    return v;
+  /* 实际展示用文案（后台清空时回落到默认 3 条，避免留白） */
+  function noteItems(){
+    return noteState.items.length ? noteState.items : NOTE_DEFAULT.slice();
   }
   function noteHint(txt){
     var el = document.getElementById("fNoteHint");
     if (el) { el.textContent = txt; }
   }
-  /* 云端行：body 存文案，link_text 存毫秒时间戳；只有比本地新才覆盖 */
-  function noteAccept(row){
-    if (!row || !row.body) { return; }
-    var ts = parseInt(row.link_text, 10) || 0;
-    var l = noteLocal();
-    if (l && l.ts > ts) { return; }
-    noteSet(row.body, ts);
+  function noteCommit(items, gap, ts){
+    noteState.items = items.slice(0, NOTE_MAX);
+    if (gap != null) { noteState.gap = gap; }
+    noteState.ts = Number(ts) || Date.now();
+    noteSaveLocal();
+    noteCur = 0;
+    noteRender();
+    return noteState;
   }
-  noteApply(noteGet());
 
+  var NOTE_HELM = '<div class="sc-helm"><svg viewBox="0 0 130 112" aria-hidden="true">'
+    + '<path d="M6 112C-2 84 2 48 26 27 48 8 88 10 104 32c14 19 12 47 1 66-7 11-14 14-21 14z" fill="url(#scHelm)"/>'
+    + '<path d="M18 57c19-17 55-19 78-4 5 12-1 25-10 30-19-9-47-9-66 0-9-9-10-19-2-26z" fill="url(#scVisor)"/>'
+    + '<path d="M20 47c21-13 54-13 74-1 2 2 1 6-2 6-21-10-49-10-69 0-2 0-4-4-3-5z" fill="#c0aeb2" opacity=".34"/>'
+    + '<path d="M8 104c14 7 48 9 68 2" stroke="#080506" stroke-width="4" fill="none" opacity=".6"/>'
+    + '</svg></div>';
+  var NOTE_BADGE = '<svg class="sc-badge" viewBox="0 0 26 30" aria-hidden="true">'
+    + '<path d="M13 1.8 2.7 5.2v10.1c0 6.1 4.3 10.5 10.3 13 6-2.5 10.3-6.9 10.3-13V5.2L13 1.8Z"'
+    + ' fill="#f2c200" stroke="#100c0d" stroke-width="1.6" stroke-linejoin="round"/>'
+    + '<path d="M4.6 6.9h16.8v2.1H4.6z" fill="#009246"/>'
+    + '<path d="M4.6 9h16.8v2.1H4.6z" fill="#f8f4ee"/>'
+    + '<path d="M4.6 11.1h16.8v2.1H4.6z" fill="#c8102e"/>'
+    + '</svg>';
+
+  var NOTE_SLOTS = [
+    { y: 0,   s: 1,    o: 1,   z: 40 },
+    { y: -13, s: .972, o: .66, z: 30 },
+    { y: -24, s: .946, o: .34, z: 20 }
+  ];
+  function noteLayout(){
+    var n = noteCards.length;
+    if (!n) { return; }
+    noteCards.forEach(function(el, i){
+      var r = (i - noteCur + n) % n;
+      var sl = NOTE_SLOTS[r] || { y: -15, s: .9, o: 0, z: 10 };
+      el.style.transform = "translateY(" + sl.y + "px) scale(" + sl.s + ")";
+      el.style.opacity = String(sl.o);
+      el.style.zIndex = String(sl.z);
+      el.style.pointerEvents = (r === 0 ? "auto" : "none");
+      el.classList.toggle("is-front", r === 0);
+      el.setAttribute("aria-hidden", r === 0 ? "false" : "true");
+    });
+  }
+  function noteRender(){
+    if (!noteStack) { return; }
+    var items = noteItems(), n = items.length;
+    noteStack.innerHTML = "";
+    noteCards = [];
+    items.forEach(function(t, i){
+      var el = document.createElement("article");
+      el.className = "sim-card";
+      el.innerHTML = '<div class="sc-top">' + NOTE_HELM
+        + '<div class="sc-id"><b>YIP</b><em>RADIO</em></div>'
+        + '<div class="sc-tail"><span class="sc-num">16</span>' + NOTE_BADGE + '</div>'
+        + '</div>'
+        + '<div class="sc-band"><span class="sc-tx">' + noteEsc(t) + '</span>'
+        + '<span class="sc-idx">' + (i < 9 ? "0" : "") + (i + 1) + "/" + (n < 10 ? "0" : "") + n + '</span></div>';
+      el.title = t;
+      noteStack.appendChild(el);
+      noteCards.push(el);
+    });
+    if (noteCur >= n) { noteCur = 0; }
+    noteLayout();
+    noteLoop();
+  }
+  function noteStep(dir){
+    var n = noteCards.length;
+    if (n < 2) { return; }
+    noteCur = (noteCur + (dir || 1) + n) % n;
+    noteLayout();
+    noteLoop();
+  }
+  function noteLoop(){
+    if (noteTimer) { clearTimeout(noteTimer); noteTimer = 0; }
+    var gap = noteState.gap, n = noteCards.length;
+    var run = gap > 0 && n > 1 && !noteHover && !document.hidden && !noteReduce();
+    if (noteProg) {
+      noteProg.style.animation = "none";
+      void noteProg.offsetWidth;
+      if (run) {
+        noteProg.style.animation = "sdProg " + gap + "ms linear forwards";
+        noteProg.style.animationPlayState = "running";
+      }
+    }
+    if (!run) { return; }
+    noteTimer = setTimeout(function(){ noteTimer = 0; noteStep(1); }, gap);
+  }
+
+  (function noteInit(){
+    var l = noteLocal();
+    if (l) { noteState = { items: l.items, gap: l.gap, ts: l.ts }; }
+    noteRender();
+    if (noteDeck) {
+      noteDeck.addEventListener("click", function(e){
+        if (e.target.closest("button")) { return; }
+        noteStep(1);
+      });
+      noteDeck.addEventListener("mouseenter", function(){ noteHover = true; noteLoop(); });
+      noteDeck.addEventListener("mouseleave", function(){ noteHover = false; noteLoop(); });
+    }
+    document.addEventListener("visibilitychange", function(){ noteLoop(); });
+  })();
+
+  /* 云端行：body 存整组 JSON，link_text 存毫秒时间戳；只有比本地新才覆盖 */
+  function noteAcceptRow(row){
+    if (!row || !row.body) { return; }
+    noteCloudOK = true;
+    var remote = noteNorm(row.body);
+    if (!remote.items.length) { return; }
+    var ts = parseInt(row.link_text, 10) || remote.ts || 0;
+    if (noteState.ts && noteState.ts > ts) { noteCloudPush(noteState.ts); return; }  /* 本地更新 → 回推 */
+    noteState = { items: remote.items, gap: remote.gap, ts: ts };
+    noteSaveLocal();
+    noteCur = 0;
+    noteRender();
+    noteAdminSync();
+  }
   function noteCloudPull(){
     if (!cloudReady) { return; }
     cloud.database.from("share_posts").select("*").eq("tag", NOTE_TAG)
       .then(function(res){
         if (res && res.error) { throw res.error; }
         var rows = (res && res.data) || [];
-        if (!rows.length || !rows[0].body) { return; }
-        var l = noteLocal(), ts = parseInt(rows[0].link_text, 10) || 0;
-        noteCloudOK = true;
-        if (l && l.ts > ts) { noteCloudPush(l.t, l.ts); return; }   /* 本地更新 → 回推 */
-        noteAccept(rows[0]);
+        if (!rows.length) { return; }
+        noteAcceptRow(rows[0]);
       })
       .catch(function(){});
   }
-  function noteCloudPush(txt, ts){
+  function noteCloudPush(ts){
     if (!cloudReady) { return; }
-    ts = Number(ts) || noteTs || Date.now();
-    var row = { tag: NOTE_TAG, date: "CONFIG", title: "SIM_NOTE", body: txt, link: "",
+    ts = Number(ts) || noteState.ts || Date.now();
+    noteState.ts = ts;
+    var body = JSON.stringify({ v: 2, items: noteItems(), gap: noteState.gap, ts: ts });
+    var row = { tag: NOTE_TAG, date: "CONFIG", title: "SIM_NOTE", body: body, link: "",
                 link_text: String(ts), media_data: "", media_kind: "", sort_order: 0 };
     cloud.database.from("share_posts").select("id").eq("tag", NOTE_TAG)
       .then(function(res){
@@ -3487,7 +3758,7 @@ body::after{
         var rows = (res && res.data) || [];
         if (rows.length && rows[0].id != null) {
           return cloud.database.from("share_posts")
-            .update({ body: txt, link_text: String(ts) }).eq("id", rows[0].id);
+            .update({ body: body, link_text: String(ts) }).eq("id", rows[0].id);
         }
         return cloud.database.from("share_posts").insert(row);
       })
@@ -3499,6 +3770,8 @@ body::after{
       })
       .catch(function(){ noteCloudOK = false; noteHint("已保存 · 云端不可达，仅本机生效"); });
   }
+  /* 由后台管理区覆盖为真实实现（此处占位，避免早期调用报错） */
+  var noteAdminSync = function(){};
 
   var LS_KEY = "ky_shares_v1";
   var LS_PEND = "ky_shares_pending_v1";
@@ -3559,13 +3832,13 @@ body::after{
       .then(function(res){
         if (res && res.error) { throw res.error; }
         var rows = (res && res.data) || [];
-        /* 提示框配置行用保留 tag 存在同一张表里，不能当成分享卡片 */
+        /* 提示卡配置行用保留 tag 存在同一张表里，不能当成分享卡片 */
         var cfg = null;
         rows = rows.filter(function(r){
           if (r && r.tag === NOTE_TAG) { if (!cfg) { cfg = r; } return false; }
           return true;
         });
-        if (cfg) { noteAccept(cfg); }
+        if (cfg) { noteAcceptRow(cfg); }
         if (rows.length) {
           var pending = shares.filter(function(x){
             return x && x.id == null && !DEFAULT_SHARES.some(function(d){ return d.title === x.title; });
@@ -3809,40 +4082,120 @@ body::after{
       adminList.appendChild(d);
     });
   }
-  /* ---- 提示框编辑 ---- */
+  /* ---- 提示卡编辑（多条：新增 / 修改 / 排序 / 删除 / 循环间隔） ---- */
   var fNote = document.getElementById("fNote");
   var fNoteHint = document.getElementById("fNoteHint");
+  var fNoteList = document.getElementById("fNoteList");
+  var fNoteGap = document.getElementById("fNoteGap");
+  var bNoteSave = document.getElementById("fNoteSave");
+  var bNoteCancel = document.getElementById("fNoteCancel");
+  var bNoteReset = document.getElementById("fNoteReset");
+  var noteEdit = -1;
+
   function noteFormFill(){
-    if (!fNote) { return; }
-    fNote.value = noteGet();
-    if (fNoteHint) {
-      fNoteHint.textContent = (noteCloudOK ? "云端已连接 · " : "") +
-        (noteGet() === NOTE_DEFAULT ? "当前：默认文案" : "当前：自定义文案");
+    noteAdminSync();
+  }
+  noteAdminSync = function(){
+    if (!fNoteList) { return; }
+    fNoteList.innerHTML = "";
+    var items = noteState.items;
+    if (!items.length) {
+      fNoteList.innerHTML = '<div class="note-item empty">暂无自定义提示 · 前台显示默认 ' + NOTE_DEFAULT.length + ' 条</div>';
+    } else {
+      items.forEach(function(t, i){
+        var d = document.createElement("div");
+        d.className = "note-item" + (i === noteEdit ? " on" : "");
+        d.innerHTML = '<span class="ni-p">' + (i + 1) + '</span>'
+          + '<span class="ni-t">' + noteEsc(t) + '</span>'
+          + '<button type="button" data-na="up" data-i="' + i + '" title="上移">↑</button>'
+          + '<button type="button" data-na="down" data-i="' + i + '" title="下移">↓</button>'
+          + '<button type="button" data-na="edit" data-i="' + i + '">编辑</button>'
+          + '<button type="button" class="del" data-na="del" data-i="' + i + '" aria-label="删除">✕</button>';
+        fNoteList.appendChild(d);
+      });
     }
+    if (fNoteGap) { fNoteGap.value = String(noteState.gap); }
+    if (bNoteSave) { bNoteSave.textContent = noteEdit >= 0 ? ("保存修改（#" + (noteEdit + 1) + "）") : "添加提示"; }
+    if (bNoteCancel) { bNoteCancel.hidden = noteEdit < 0; }
+  };
+  function noteCommitUI(items, gap, msg){
+    noteCommit(items, gap, null);
+    noteAdminSync();
+    noteHint((noteCloudOK ? "云端已连接 · " : "") + msg);
+    if (cloudMode) { noteCloudPush(); }
   }
   if (fNote) {
-    var bNoteSave = document.getElementById("fNoteSave");
-    var bNoteReset = document.getElementById("fNoteReset");
-    fNote.addEventListener("input", function(){
-      if (fNoteHint) { fNoteHint.textContent = "未保存"; }
-    });
-    if (bNoteSave) {
-      bNoteSave.addEventListener("click", function(){
-        var v = noteSet(fNote.value);
-        fNote.value = v;
-        if (fNoteHint) { fNoteHint.textContent = cloudMode ? "已保存 · 正在同步云端" : "已保存 · 仅本机生效"; }
-        noteCloudPush(v);
-      });
-    }
-    if (bNoteReset) {
-      bNoteReset.addEventListener("click", function(){
-        var v = noteSet(NOTE_DEFAULT);
-        fNote.value = v;
-        if (fNoteHint) { fNoteHint.textContent = "已恢复默认文案"; }
-        noteCloudPush(v);
-      });
-    }
+    fNote.addEventListener("input", function(){ noteHint("未保存"); });
   }
+  if (fNoteList) {
+    fNoteList.addEventListener("click", function(e){
+      var b = e.target.closest("button[data-na]");
+      if (!b) { return; }
+      var i = parseInt(b.dataset.i, 10), act = b.dataset.na;
+      var items = noteState.items.slice();
+      if (act === "edit") {
+        noteEdit = i; fNote.value = items[i]; noteAdminSync(); fNote.focus();
+        noteHint("编辑第 " + (i + 1) + " 条");
+        return;
+      }
+      if (act === "del") {
+        items.splice(i, 1);
+        if (noteEdit === i) { noteEdit = -1; fNote.value = ""; }
+        else if (noteEdit > i) { noteEdit--; }
+        noteCommitUI(items, null, "已删除第 " + (i + 1) + " 条");
+        return;
+      }
+      if (act === "up" && i > 0) {
+        items.splice(i - 1, 0, items.splice(i, 1)[0]);
+        if (noteEdit === i) { noteEdit = i - 1; } else if (noteEdit === i - 1) { noteEdit = i; }
+        noteCommitUI(items, null, "已上移");
+        return;
+      }
+      if (act === "down" && i < items.length - 1) {
+        items.splice(i + 1, 0, items.splice(i, 1)[0]);
+        if (noteEdit === i) { noteEdit = i + 1; } else if (noteEdit === i + 1) { noteEdit = i; }
+        noteCommitUI(items, null, "已下移");
+      }
+    });
+  }
+  if (bNoteSave && fNote) {
+    bNoteSave.addEventListener("click", function(){
+      var v = (fNote.value || "").trim();
+      if (!v) { fNote.focus(); noteHint("请先输入提示文字"); return; }
+      var items = noteState.items.slice();
+      var msg;
+      if (noteEdit >= 0 && noteEdit < items.length) {
+        items[noteEdit] = v;
+        msg = "已更新第 " + (noteEdit + 1) + " 条";
+        noteEdit = -1;
+      } else {
+        if (items.length >= NOTE_MAX) { noteHint("最多 " + NOTE_MAX + " 条，请先删除一条"); return; }
+        items.push(v);
+        msg = "已添加第 " + items.length + " 条";
+      }
+      fNote.value = "";
+      noteCommitUI(items, null, msg);
+    });
+  }
+  if (bNoteCancel) {
+    bNoteCancel.addEventListener("click", function(){
+      noteEdit = -1; fNote.value = ""; noteAdminSync(); noteHint("已取消编辑");
+    });
+  }
+  if (bNoteReset) {
+    bNoteReset.addEventListener("click", function(){
+      noteEdit = -1;
+      if (fNote) { fNote.value = ""; }
+      noteCommitUI(NOTE_DEFAULT.slice(), NOTE_GAP_DEF, "已恢复默认提示");
+    });
+  }
+  if (fNoteGap) {
+    fNoteGap.addEventListener("change", function(){
+      var g = parseInt(fNoteGap.value, 10) || 0;
+      noteCommitUI(noteState.items.slice(), g, g ? ("循环间隔 " + (g / 1000) + " 秒") : "已关闭自动轮播");
+    });
+  }
+  noteAdminSync();
 
   if (adminList) {
     adminList.addEventListener("click", function(e){
@@ -3909,7 +4262,7 @@ body::after{
             var seed = JSON.parse(JSON.stringify(DEFAULT_SHARES)).map(function(it, i){ return itemToRow(it, 50 - i * 10); });
             return cloud.database.from("share_posts").insert(seed);
           })
-          .then(function(){ cur = 0; resetForm(); cloudReload(); noteCloudPush(noteGet()); })
+          .then(function(){ cur = 0; resetForm(); cloudReload(); noteCloudPush(); })
           .catch(adminFail);
         return;
       }
@@ -3950,7 +4303,7 @@ body::after{
                 if (res && res.error) { throw res.error; }
                 return cloud.database.from("share_posts").insert(rows);
               })
-              .then(function(){ cur = 0; resetForm(); cloudReload(); noteCloudPush(noteGet()); })
+              .then(function(){ cur = 0; resetForm(); cloudReload(); noteCloudPush(); })
               .catch(function(err){ adminFail(err); });
             return;
           }
