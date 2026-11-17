@@ -3374,7 +3374,7 @@ body::after{
   var NOTE_DEFAULT = "按 Play 接管赛车 · ← → 转向 · ↑ 加速 · ↓ 制动";
   var noteTxEl = document.getElementById("simNoteTx");
   var noteBoxEl = document.getElementById("simNote");
-  var noteTs = 0;
+  var noteTs = 0, noteCloudOK = false;
 
   function noteLocal(){
     try {
@@ -3403,6 +3403,10 @@ body::after{
     try { localStorage.setItem(LS_NOTE, JSON.stringify({ t: v, ts: noteTs })); } catch(e){}
     return v;
   }
+  function noteHint(txt){
+    var el = document.getElementById("fNoteHint");
+    if (el) { el.textContent = txt; }
+  }
   /* 云端行：body 存文案，link_text 存毫秒时间戳；只有比本地新才覆盖 */
   function noteAccept(row){
     if (!row || !row.body) { return; }
@@ -3421,6 +3425,7 @@ body::after{
         var rows = (res && res.data) || [];
         if (!rows.length || !rows[0].body) { return; }
         var l = noteLocal(), ts = parseInt(rows[0].link_text, 10) || 0;
+        noteCloudOK = true;
         if (l && l.ts > ts) { noteCloudPush(l.t, l.ts); return; }   /* 本地更新 → 回推 */
         noteAccept(rows[0]);
       })
@@ -3443,9 +3448,11 @@ body::after{
       })
       .then(function(res){
         if (res && res.error) { throw res.error; }
+        noteCloudOK = true;
         setCloudState("CONNECTED · 全网同步");
+        noteHint("已保存 · 已同步云端");
       })
-      .catch(function(){});
+      .catch(function(){ noteCloudOK = false; noteHint("已保存 · 云端不可达，仅本机生效"); });
   }
 
   var LS_KEY = "ky_shares_v1";
@@ -3763,7 +3770,10 @@ body::after{
   function noteFormFill(){
     if (!fNote) { return; }
     fNote.value = noteGet();
-    if (fNoteHint) { fNoteHint.textContent = noteGet() === NOTE_DEFAULT ? "当前：默认文案" : "当前：自定义文案"; }
+    if (fNoteHint) {
+      fNoteHint.textContent = (noteCloudOK ? "云端已连接 · " : "") +
+        (noteGet() === NOTE_DEFAULT ? "当前：默认文案" : "当前：自定义文案");
+    }
   }
   if (fNote) {
     var bNoteSave = document.getElementById("fNoteSave");
@@ -3775,7 +3785,7 @@ body::after{
       bNoteSave.addEventListener("click", function(){
         var v = noteSet(fNote.value);
         fNote.value = v;
-        if (fNoteHint) { fNoteHint.textContent = cloudReady ? "已保存 · 正在同步云端" : "已保存 · 仅本机"; }
+        if (fNoteHint) { fNoteHint.textContent = cloudMode ? "已保存 · 正在同步云端" : "已保存 · 仅本机生效"; }
         noteCloudPush(v);
       });
     }
