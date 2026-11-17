@@ -296,6 +296,23 @@ body::after{
 .hud-live.paused i{animation:none;opacity:.45}
 /* ---------- SIM · F1 赛道模拟器 ---------- */
 .sim{position:relative;border-bottom:1px solid var(--line-soft);background:#080607}
+/* 游戏区上方的提示框（后台可编辑） */
+.sim-note{
+  position:relative;display:flex;align-items:center;gap:8px;
+  padding:7px 11px 7px 12px;border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(90deg,rgba(225,6,0,.16),rgba(10,7,8,.94) 46%,rgba(10,7,8,.98));
+  font-family:var(--mono);font-size:9.5px;line-height:1.35;letter-spacing:.02em;
+}
+.sim-note::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--red)}
+.sim-note .sn-tag{
+  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi);
+}
+.sim-note .sn-tag i{width:4px;height:4px;border-radius:50%;background:var(--red);animation:blink 1.6s infinite}
+.sim-note .sn-tx{
+  flex:1 1 auto;min-width:0;color:rgba(246,240,234,.9);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 .sim-view{position:relative;aspect-ratio:16/9;overflow:hidden;isolation:isolate}
 .sim-view canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
 .sim-view.ov .sim-hud{opacity:0}
@@ -918,6 +935,12 @@ body::after{
 .fld input:focus,.fld textarea:focus{border-color:var(--red)}
 .fld textarea{min-height:84px;resize:vertical;line-height:1.6}
 .fld-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admin-sec{display:grid;gap:9px}
+.admin-sec-t{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--red-hi)}
+.note-fld textarea{min-height:56px}
+.note-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.note-hint{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--mute)}
+.admin-rule{height:1px;background:var(--line-soft);margin:0 0 2px}
 .media-pick{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .media-pick .hint{font-family:var(--mono);font-size:9px;color:var(--mute);letter-spacing:.04em}
 .media-prev{position:relative;margin-top:8px;border:1px solid var(--line-soft);overflow:hidden}
@@ -1078,6 +1101,19 @@ body::after{
       <button class="admin-x" type="button" data-admin-close aria-label="关闭">✕</button>
     </div>
     <div class="admin-body">
+      <div class="admin-sec">
+        <span class="admin-sec-t">赛道提示框 / Race Note</span>
+        <div class="fld note-fld">
+          <label>游戏区上方提示文字（≤120 字，保存后立即生效）</label>
+          <textarea id="fNote" maxlength="120" placeholder="例如：本场为街道赛，注意 3 号弯出弯速度。"></textarea>
+        </div>
+        <div class="note-row">
+          <button class="btn btn-primary" id="fNoteSave" type="button">保存提示</button>
+          <button class="btn btn-ghost" id="fNoteReset" type="button">恢复默认</button>
+          <span class="note-hint" id="fNoteHint">—</span>
+        </div>
+      </div>
+      <div class="admin-rule"></div>
       <div class="fld">
         <label>标签 / Tag</label>
         <input id="fTag" maxlength="12" placeholder="如：项目 / 动态 / 作品">
@@ -1218,6 +1254,10 @@ body::after{
       </div>
 
       <div class="sim" id="sim">
+        <div class="sim-note" id="simNote" role="status" aria-live="polite">
+          <span class="sn-tag"><i></i>Race Note</span>
+          <span class="sn-tx" id="simNoteTx">按 Play 接管赛车 · ← → 转向 · ↑ 加速 · ↓ 制动</span>
+        </div>
         <div class="sim-view" id="simView">
           <canvas id="simCanvas" width="960" height="540" tabindex="-1"
                   aria-label="F1 赛道模拟器画面。默认由自动驾驶行驶，点击 Play 接管为手动驾驶；左右方向键转向，上下方向键加速与制动。"></canvas>
@@ -1766,9 +1806,13 @@ body::after{
     var CAM = { h: 17.5, f: 225, sp: Math.sin(PITCH), cp: Math.cos(PITCH) };
     var BEST_KEY = "ky_sim_best";
     var HW = 8.1;                                 // 半路宽（m）
+    var MIN_R = 13.4;                             // 弯心最小半径（m）
+    var CLEAR = 26;                               // 非相邻路段中心线最小间距（m）
     var TOPV = 96;                                // 极速 m/s
     var DRIFT = 0.098, STEER = 10.4, GRIP = 16;   // 离心 / 转向 / 抓地
-    var ENGINE = 16.4;                            // 引擎推力（m/s²，随车速线性衰减）
+    var ENGINE = 22.5;                            // 引擎推力（m/s²，随车速线性衰减）
+    var BRAKE = 48;                               // 制动减速度（m/s²）
+    var AI_ACC = 11.6, AI_DEC = 26;               // 对手车的加速度上限 / 制动上限（明显低于玩家）
 
     var spdEl = document.getElementById("spdVal");
     var gearEl = document.getElementById("gearVal");
@@ -1883,67 +1927,67 @@ body::after{
       return t;
     }
 
-    /* 星形多边形 → 顶点圆弧倒角：直边成直道，圆弧成弯道。
-       额外注入「发夹点」与「S 弯对」制造大角度弯。 */
-    function buildTrack(){
-      var rnd = rng((Math.random() * 1e9) | 0);
-      var i, j, n = 10 + Math.floor(rnd() * 4);      // 10..13 基础顶点
-      var gaps = [], sum = 0;
+    /* 极角点 → 平面坐标。极角升序且半径为正，保证多边形自身不自交。
+       再用「绝对半径圆弧倒角」把顶点变成弯道：直边成直道，圆弧成弯道。 */
+    function makePolygon(rnd){
+      var i, n = 11 + Math.floor(rnd() * 5);        // 11..15 个顶点
+      var gaps = [], sum = 0, g;
       for (i = 0; i < n; i++){
-        var g = 0.55 + rnd() * 1.05;
-        if (rnd() < 0.40) { g *= 0.36; }             // 窄角 → 急弯
+        g = 0.58 + rnd() * 0.86;
+        if (rnd() < 0.34) { g *= 0.55; }            // 窄角间距 → 更急的弯
         gaps[i] = g; sum += g;
       }
-      var V = [], acc = 0, rr = 0.68 + rnd() * 0.32;
+      var V = [], acc = 0, rr = 0.74 + rnd() * 0.26, r;
       for (i = 0; i < n; i++){
-        var r;
-        if (rnd() < 0.34) { r = rr; }                // 与上点同半径 → 长直道
-        else { rr = 0.42 + rnd() * 0.58; r = rr; }
-        V.push({ a: acc, r: r });
-        acc += gaps[i] / sum * Math.PI * 2;
-      }
-
-      /* 发夹：在几乎相同角度插入一个半径骤减的顶点 → 内角极锐 */
-      var hairs = 2 + Math.floor(rnd() * 3);
-      for (i = 0; i < hairs; i++){
-        var hi = 1 + Math.floor(rnd() * (V.length - 1));
-        var hb = V[hi];
-        var da = (rnd() < 0.5 ? -1 : 1) * (0.050 + rnd() * 0.085);
-        V.push({ a: hb.a + da, r: hb.r * (0.38 + rnd() * 0.24) });
-      }
-      /* S 弯：给随机点补一个反向偏移的小半径点 */
-      if (rnd() < 0.75){
-        var si = 1 + Math.floor(rnd() * (V.length - 1));
-        V.push({ a: V[si].a + 0.12 + rnd() * 0.08, r: V[si].r * (0.55 + rnd() * 0.2) });
+        if (rnd() < 0.22) { r = rr; }               // 与前点同半径 → 长直道
+        else { rr = 0.40 + rnd() * 0.60; r = rr; }  // 半径深凹 → 大角度弯
+        V.push({ a: acc / sum * Math.PI * 2, r: r });
+        acc += gaps[i];
       }
       V.sort(function(p, q){ return p.a - q.a; });
-
-      /* 由 (角度, 半径) → 平面点 */
-      var P0 = [];
+      var P = [];
       for (i = 0; i < V.length; i++){
-        P0.push({ x: Math.cos(V[i].a) * V[i].r * 260, y: Math.sin(V[i].a) * V[i].r * 260 });
+        P.push({ x: Math.cos(V[i].a) * V[i].r * 260, y: Math.sin(V[i].a) * V[i].r * 260 });
       }
-      var m = P0.length;
+      return P;
+    }
 
-      /* 逐顶点圆弧倒角 */
-      var rx = [], ry = [];
+    /* 先按目标周长缩放多边形，再倒角 —— 弯道半径由绝对米数决定，不会被缩放破坏 */
+    function scalePoly(P, per){
+      var i, L = 0, m = P.length;
       for (i = 0; i < m; i++){
-        var P = P0[i], A = P0[(i - 1 + m) % m], B = P0[(i + 1) % m];
-        var v1x = A.x - P.x, v1y = A.y - P.y, v2x = B.x - P.x, v2y = B.y - P.y;
+        var b = (i + 1) % m, dx = P[b].x - P[i].x, dy = P[b].y - P[i].y;
+        L += Math.sqrt(dx * dx + dy * dy);
+      }
+      var k = per / L;
+      for (i = 0; i < m; i++){ P[i].x *= k; P[i].y *= k; }
+      return P;
+    }
+
+    /* 顶点倒角：r 为弯心半径，切线长 tl = r / tan(β/2)，受相邻边长约束
+       （tl ≤ 0.42·min 边长，两端的倒角不会互相吃掉） */
+    function filletPoly(P, rnd){
+      var rx = [], ry = [], m = P.length, i, j, ok = true, turns = [];
+      for (i = 0; i < m; i++){
+        var Pp = P[i], A = P[(i - 1 + m) % m], B = P[(i + 1) % m];
+        var v1x = A.x - Pp.x, v1y = A.y - Pp.y, v2x = B.x - Pp.x, v2y = B.y - Pp.y;
         var l1 = Math.sqrt(v1x * v1x + v1y * v1y), l2 = Math.sqrt(v2x * v2x + v2y * v2y);
-        if (l1 < 1e-3 || l2 < 1e-3) { rx.push(P.x); ry.push(P.y); continue; }
+        if (l1 < 1e-3 || l2 < 1e-3) { rx.push(Pp.x); ry.push(Pp.y); continue; }
         var u1x = v1x / l1, u1y = v1y / l1, u2x = v2x / l2, u2y = v2y / l2;
         var dot = Math.max(-1, Math.min(1, u1x * u2x + u1y * u2y));
         var inAng = Math.acos(dot);
-        if (inAng > Math.PI - 0.06){ rx.push(P.x); ry.push(P.y); continue; }
-        var frac = 0.075 + rnd() * 0.235;                        // 倒角比例越小 → 弯越急
-        var tl = Math.min(frac * Math.min(l1, l2), 0.40 * Math.min(l1, l2));
-        var rArc = tl * Math.tan(inAng / 2);
-        var T1x = P.x + u1x * tl, T1y = P.y + u1y * tl;
-        var T2x = P.x + u2x * tl, T2y = P.y + u2y * tl;
+        if (inAng > 2.62) { rx.push(Pp.x); ry.push(Pp.y); continue; }   // >150°：近乎直线，直接过
+        var want = 15 + rnd() * 26;                                    // 期望弯心半径 15~41m
+        var tn = Math.tan(inAng / 2);
+        var tl = Math.min(0.42 * Math.min(l1, l2), want / tn);
+        var rArc = tl * tn;
+        if (rArc < MIN_R) { ok = false; break; }                       // 弯太急 → 整条作废
+        turns.push({ deg: (Math.PI - inAng) * 180 / Math.PI, r: rArc });
+        var T1x = Pp.x + u1x * tl, T1y = Pp.y + u1y * tl;
+        var T2x = Pp.x + u2x * tl, T2y = Pp.y + u2y * tl;
         var bx = u1x + u2x, by = u1y + u2y, bl = Math.sqrt(bx * bx + by * by) || 1;
         var dOff = rArc / Math.sin(inAng / 2);
-        var Cx = P.x + bx / bl * dOff, Cy = P.y + by / bl * dOff;
+        var Cx = Pp.x + bx / bl * dOff, Cy = Pp.y + by / bl * dOff;
         var a0 = Math.atan2(T1y - Cy, T1x - Cx), a1 = Math.atan2(T2y - Cy, T2x - Cx);
         var dA = a1 - a0;
         while (dA > Math.PI) { dA -= Math.PI * 2; }
@@ -1955,39 +1999,88 @@ body::after{
           ry.push(Cy + Math.sin(aa) * rArc);
         }
       }
+      return { x: rx, y: ry, ok: ok, turns: turns };
+    }
 
-      /* 周长归一到 1.7~2.15 km */
-      var L0 = 0;
-      for (i = 0; i < rx.length; i++){
-        var b2 = (i + 1) % rx.length, dx0 = rx[b2] - rx[i], dy0 = ry[b2] - ry[i];
-        L0 += Math.sqrt(dx0 * dx0 + dy0 * dy0);
-      }
-      var k = (1320 + rnd() * 360) / L0;                       // 单圈约 27~32 秒
-      for (i = 0; i < rx.length; i++){ rx[i] *= k; ry[i] *= k; }
-
-      var t = finishTrack(resample(rx, ry, 4));
-      var lim = 1 / 13.2;                       // 最急弯半径 ≥ 13m（须明显大于半路宽）
-
-      /* 曲率超限的点局部向邻居中点收拢：只削最尖的骨点，不改整体形状 */
-      for (var it = 0; it < 16 && t.maxK > lim * 1.01; it++){
-        var nn = t.n, bx = new Float64Array(nn), by = new Float64Array(nn);
-        for (i = 0; i < nn; i++){
-          var kk = Math.abs(t.k[i]);
-          var f = kk > lim ? Math.min(0.42, (kk / lim - 1) * 0.30) : 0;
-          var i0 = (i - 1 + nn) % nn, i1 = (i + 1) % nn;
-          bx[i] = t.x[i] + ((t.x[i0] + t.x[i1]) * 0.5 - t.x[i]) * f;
-          by[i] = t.y[i] + ((t.y[i0] + t.y[i1]) * 0.5 - t.y[i]) * f;
+    /* 非相邻路段（沿赛道 >40m）是否都拉开了 CLEAR 以上：早退，够用就停 */
+    function clearOK(t){
+      var n = t.n, X = t.x, Y = t.y, skip = Math.ceil(40 / t.ds), i, j;
+      var lim = CLEAR * CLEAR;
+      for (i = 0; i < n; i++){
+        for (j = i + skip; j < n; j++){
+          if (n - (j - i) < skip) { continue; }
+          var dx = X[i] - X[j], dy = Y[i] - Y[j];
+          if (dx * dx + dy * dy < lim) { return false; }
         }
-        t = finishTrack({ x: bx, y: by, n: nn, ds: t.ds, len: t.len });
       }
-      /* 仍有超限则整体放大（极限兜底） */
-      for (var pass = 0; pass < 2 && t.maxK > lim; pass++){
-        var sc = Math.min(1.25, t.maxK / lim);
-        for (i = 0; i < t.n; i++){ t.x[i] *= sc; t.y[i] *= sc; }
-        t = finishTrack({ x: t.x, y: t.y, n: t.n, ds: t.ds * sc, len: t.len * sc });
+      return true;
+    }
+
+    /* 周长 / 凸包周长：太接近 1 说明形状过圆、没有真正的大角度弯 */
+    function hullRatio(t){
+      var pts = [], i;
+      for (i = 0; i < t.n; i++){ pts.push([t.x[i], t.y[i]]); }
+      pts.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
+      function cr(o, a, b){ return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }
+      var lo = [], up = [];
+      for (i = 0; i < pts.length; i++){
+        while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], pts[i]) <= 0) { lo.pop(); }
+        lo.push(pts[i]);
       }
+      for (i = pts.length - 1; i >= 0; i--){
+        while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], pts[i]) <= 0) { up.pop(); }
+        up.push(pts[i]);
+      }
+      var h = lo.concat(up.slice(1, -1)), L = 0;
+      for (i = 0; i < h.length; i++){
+        var b = (i + 1) % h.length;
+        L += Math.sqrt(Math.pow(h[b][0] - h[i][0], 2) + Math.pow(h[b][1] - h[i][1], 2));
+      }
+      return L > 0 ? t.len / L : 0;
+    }
+
+    /* 单条候选赛道：几何不合格就整条丢弃（不靠后期拉伸/平滑去凑） */
+    function tryTrack(seed){
+      var rnd = rng(seed);
+      var P = scalePoly(makePolygon(rnd), 1500 + rnd() * 320);
+      var f = filletPoly(P, rnd);
+      if (!f.ok) { return null; }
+      var t = finishTrack(resample(f.x, f.y, 4));
+      if (t.maxK > 1 / 13.2) { return null; }        // 曲率超限（倒角接缝处）
+      if (!clearOK(t)) { return null; }              // 非相邻路段贴太近 → 路面重叠
+      if (hullRatio(t) < 1.05) { return null; }      // 太圆 → 没有大角度弯
+      var big = 0, i;
+      for (i = 0; i < f.turns.length; i++){ if (f.turns[i].deg >= 65) { big++; } }
+      t.corners = f.turns.length;
+      t.bigTurns = big;
       t.hw = HW;
       t.map = null;
+      return t;
+    }
+
+    function buildTrack(){
+      var i, t;
+      for (i = 0; i < 40; i++){
+        t = tryTrack((Math.random() * 1e9) | 0);
+        if (t) { return t; }
+      }
+      for (i = 0; i < 24; i++){                       // 兜底：固定种子再试
+        t = tryTrack(20261117 + i * 7919);
+        if (t) { return t; }
+      }
+      return ringTrack();                             // 理论上到不了这里
+    }
+
+    /* 终极兜底：正十边形倒角，几何必然合规（几乎不会被执行） */
+    function ringTrack(){
+      var P = [], i, n = 10;
+      for (i = 0; i < n; i++){
+        var a = i / n * Math.PI * 2, r = i % 2 ? 196 : 240;
+        P.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+      }
+      var f = filletPoly(P, rng(7));
+      var t = finishTrack(resample(f.x, f.y, 4));
+      t.hw = HW; t.map = null; t.corners = 10; t.bigTurns = 0;
       return t;
     }
 
@@ -2293,7 +2386,7 @@ body::after{
 
       if (c.ai){
         var idx = ((Math.floor(c.s / T.ds) % T.n) + T.n) % T.n;
-        var vt = Math.min(TOPV, T.spd[idx] * c.skill);
+        var vt = Math.min(TOPV * 0.94, T.spd[idx] * c.skill);
         /* 前车堵路时收油 */
         for (var i = 0; i < cars.length; i++){
           var o = cars[i];
@@ -2301,8 +2394,8 @@ body::after{
           var dd = o.dist - c.dist;
           if (dd > 1 && dd < 9 && Math.abs(o.lat - c.lat) < 2.0 && o.v < c.v){ vt *= 0.9; break; }
         }
-        c.vt += (vt - c.vt) * Math.min(1, dt * 3.4);
-        a = clamp((c.vt - v) * 3.8, -33, 15);
+        c.vt += (vt - c.vt) * Math.min(1, dt * 2.9);
+        a = clamp((c.vt - v) * 3.4, -AI_DEC, AI_ACC);
         var tgt = laneTarget(c);
         var latV = clamp((tgt - c.lat) * 1.7, -9.5, 9.5);
         c.lat += (latV - drift) * dt;
@@ -2315,14 +2408,14 @@ body::after{
 
         /* 踏板行程：踩下按斜率逼近、松开回落更快，避免点按即全油/全刹 */
         var tT = keys.u ? 1 : 0, tB = keys.d ? 1 : 0;
-        c.thr += (tT - c.thr) * Math.min(1, dt * (tT > c.thr ? 9.0 : 13));
-        c.brk += (tB - c.brk) * Math.min(1, dt * (tB > c.brk ? 15 : 18));
+        c.thr += (tT - c.thr) * Math.min(1, dt * (tT > c.thr ? 14 : 17));
+        c.brk += (tB - c.brk) * Math.min(1, dt * (tB > c.brk ? 20 : 24));
 
         /* 动力：扭矩随车速线性衰减；风阻 ∝ v² 压住极速；松油只剩滑行阻力 */
-        var aEng = ENGINE * c.thr * Math.max(0, 1 - v / (TOPV * 1.02)) + 0.9 * c.thr;
-        var aDrg = 0.34 + 0.000235 * v * v;
-        var aRol = 1.45 * (1 - c.thr);
-        var aBrk = 38 * c.brk * Math.min(1, v / 3.2);      // 临近停止线性收力，不硬生生归零
+        var aEng = ENGINE * c.thr * Math.max(0, 1 - Math.pow(v / (TOPV * 1.06), 1.6)) + 0.9 * c.thr;
+        var aDrg = 0.34 + 0.00020 * v * v;
+        var aRol = 1.25 * (1 - c.thr);
+        var aBrk = BRAKE * c.brk * Math.min(1, v / 3.2);   // 临近停止线性收力，不硬生生归零
         a = aEng - aDrg - aRol - aBrk;
       }
 
@@ -3275,6 +3368,86 @@ body::after{
     if (el) { el.textContent = "CLOUD · " + txt; el.style.color = bad ? "#ff8a80" : ""; }
   }
 
+  /* ---- 游戏区提示框：后台可编辑（本地立即生效 + 云端带版本号同步） ---- */
+  var LS_NOTE = "ky_sim_note_v1";
+  var NOTE_TAG = "__simnote";
+  var NOTE_DEFAULT = "按 Play 接管赛车 · ← → 转向 · ↑ 加速 · ↓ 制动";
+  var noteTxEl = document.getElementById("simNoteTx");
+  var noteBoxEl = document.getElementById("simNote");
+  var noteTs = 0;
+
+  function noteLocal(){
+    try {
+      var raw = localStorage.getItem(LS_NOTE);
+      if (!raw) { return null; }
+      if (raw.charAt(0) === "{") {
+        var o = JSON.parse(raw);
+        if (o && typeof o.t === "string") { return { t: o.t, ts: Number(o.ts) || 0 }; }
+      }
+      return { t: raw, ts: 0 };
+    } catch(e){ return null; }
+  }
+  function noteGet(){
+    var l = noteLocal();
+    return (l && l.t && l.t.trim()) ? l.t : NOTE_DEFAULT;
+  }
+  function noteApply(txt){
+    txt = (txt == null ? "" : String(txt)).trim() || NOTE_DEFAULT;
+    if (noteTxEl) { noteTxEl.textContent = txt; }
+    if (noteBoxEl) { noteBoxEl.title = txt; }
+    return txt;
+  }
+  function noteSet(txt, ts){
+    var v = noteApply(txt);
+    noteTs = Number(ts) || Date.now();
+    try { localStorage.setItem(LS_NOTE, JSON.stringify({ t: v, ts: noteTs })); } catch(e){}
+    return v;
+  }
+  /* 云端行：body 存文案，link_text 存毫秒时间戳；只有比本地新才覆盖 */
+  function noteAccept(row){
+    if (!row || !row.body) { return; }
+    var ts = parseInt(row.link_text, 10) || 0;
+    var l = noteLocal();
+    if (l && l.ts > ts) { return; }
+    noteSet(row.body, ts);
+  }
+  noteApply(noteGet());
+
+  function noteCloudPull(){
+    if (!cloudReady) { return; }
+    cloud.database.from("share_posts").select("*").eq("tag", NOTE_TAG)
+      .then(function(res){
+        if (res && res.error) { throw res.error; }
+        var rows = (res && res.data) || [];
+        if (!rows.length || !rows[0].body) { return; }
+        var l = noteLocal(), ts = parseInt(rows[0].link_text, 10) || 0;
+        if (l && l.ts > ts) { noteCloudPush(l.t, l.ts); return; }   /* 本地更新 → 回推 */
+        noteAccept(rows[0]);
+      })
+      .catch(function(){});
+  }
+  function noteCloudPush(txt, ts){
+    if (!cloudReady) { return; }
+    ts = Number(ts) || noteTs || Date.now();
+    var row = { tag: NOTE_TAG, date: "CONFIG", title: "SIM_NOTE", body: txt, link: "",
+                link_text: String(ts), media_data: "", media_kind: "", sort_order: 0 };
+    cloud.database.from("share_posts").select("id").eq("tag", NOTE_TAG)
+      .then(function(res){
+        if (res && res.error) { throw res.error; }
+        var rows = (res && res.data) || [];
+        if (rows.length && rows[0].id != null) {
+          return cloud.database.from("share_posts")
+            .update({ body: txt, link_text: String(ts) }).eq("id", rows[0].id);
+        }
+        return cloud.database.from("share_posts").insert(row);
+      })
+      .then(function(res){
+        if (res && res.error) { throw res.error; }
+        setCloudState("CONNECTED · 全网同步");
+      })
+      .catch(function(){});
+  }
+
   var LS_KEY = "ky_shares_v1";
   var LS_PEND = "ky_shares_pending_v1";
   var DEFAULT_SHARES = [
@@ -3310,7 +3483,7 @@ body::after{
     var out = [];
     try {
       var s = JSON.parse(localStorage.getItem(LS_KEY) || "null");
-      if (Array.isArray(s)) { out = s.filter(function(x){ return x && x.title; }); }
+      if (Array.isArray(s)) { out = s.filter(function(x){ return x && x.title && x.tag !== NOTE_TAG; }); }
     } catch(e){}
     DEFAULT_SHARES.forEach(function(d){
       if (!out.some(function(x){ return x.title === d.title; })) { out.push(JSON.parse(JSON.stringify(d))); }
@@ -3334,6 +3507,13 @@ body::after{
       .then(function(res){
         if (res && res.error) { throw res.error; }
         var rows = (res && res.data) || [];
+        /* 提示框配置行用保留 tag 存在同一张表里，不能当成分享卡片 */
+        var cfg = null;
+        rows = rows.filter(function(r){
+          if (r && r.tag === NOTE_TAG) { if (!cfg) { cfg = r; } return false; }
+          return true;
+        });
+        if (cfg) { noteAccept(cfg); }
         if (rows.length) {
           var pending = shares.filter(function(x){
             return x && x.id == null && !DEFAULT_SHARES.some(function(d){ return d.title === x.title; });
@@ -3462,6 +3642,7 @@ body::after{
     if (bPrev) { bPrev.addEventListener("click", deckPrev); }
     renderDeck();
     cloudReload();
+    noteCloudPull();
   }
 
   /* ============================================================
@@ -3576,6 +3757,38 @@ body::after{
       adminList.appendChild(d);
     });
   }
+  /* ---- 提示框编辑 ---- */
+  var fNote = document.getElementById("fNote");
+  var fNoteHint = document.getElementById("fNoteHint");
+  function noteFormFill(){
+    if (!fNote) { return; }
+    fNote.value = noteGet();
+    if (fNoteHint) { fNoteHint.textContent = noteGet() === NOTE_DEFAULT ? "当前：默认文案" : "当前：自定义文案"; }
+  }
+  if (fNote) {
+    var bNoteSave = document.getElementById("fNoteSave");
+    var bNoteReset = document.getElementById("fNoteReset");
+    fNote.addEventListener("input", function(){
+      if (fNoteHint) { fNoteHint.textContent = "未保存"; }
+    });
+    if (bNoteSave) {
+      bNoteSave.addEventListener("click", function(){
+        var v = noteSet(fNote.value);
+        fNote.value = v;
+        if (fNoteHint) { fNoteHint.textContent = cloudReady ? "已保存 · 正在同步云端" : "已保存 · 仅本机"; }
+        noteCloudPush(v);
+      });
+    }
+    if (bNoteReset) {
+      bNoteReset.addEventListener("click", function(){
+        var v = noteSet(NOTE_DEFAULT);
+        fNote.value = v;
+        if (fNoteHint) { fNoteHint.textContent = "已恢复默认文案"; }
+        noteCloudPush(v);
+      });
+    }
+  }
+
   if (adminList) {
     adminList.addEventListener("click", function(e){
       var b = e.target.closest("button[data-act]");
@@ -3641,7 +3854,7 @@ body::after{
             var seed = JSON.parse(JSON.stringify(DEFAULT_SHARES)).map(function(it, i){ return itemToRow(it, 50 - i * 10); });
             return cloud.database.from("share_posts").insert(seed);
           })
-          .then(function(){ cur = 0; resetForm(); cloudReload(); })
+          .then(function(){ cur = 0; resetForm(); cloudReload(); noteCloudPush(noteGet()); })
           .catch(adminFail);
         return;
       }
@@ -3682,7 +3895,7 @@ body::after{
                 if (res && res.error) { throw res.error; }
                 return cloud.database.from("share_posts").insert(rows);
               })
-              .then(function(){ cur = 0; resetForm(); cloudReload(); })
+              .then(function(){ cur = 0; resetForm(); cloudReload(); noteCloudPush(noteGet()); })
               .catch(function(err){ adminFail(err); });
             return;
           }
@@ -3706,6 +3919,7 @@ body::after{
   function adminUnlocked(){ try { return sessionStorage.getItem(ADMIN_S) === "1"; } catch(e){ return false; } }
   function openAdmin(){
     renderAdminList();
+    if (typeof noteFormFill === "function") { noteFormFill(); }
     admin.classList.add("open");
     admin.setAttribute("aria-hidden", "false");
   }
