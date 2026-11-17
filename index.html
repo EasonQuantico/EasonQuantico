@@ -3592,9 +3592,14 @@ body::after{
     setCloudState("OFFLINE · 本地模式", true);
     noteHint("云端未连接 · 改动只存本机，请用正式地址 kuangye-homepage.app.workbuddy.host 访问");
   }
+  /* 云服务对 Origin 做精确匹配：不同源必然被拒，别让它白等重试 */
+  function sameOriginCloud(){
+    try { return location.origin === new URL(WB_CFG.endpoint).origin; } catch(e){ return false; }
+  }
   function bootCloud(){
     if (cloudBooted) { return; }
     cloudBooted = true;
+    if (!sameOriginCloud()) { cloudOfflineHint(); return; }
     ensureCloudSdk(function(){
       if (!cloudReady) { cloudOfflineHint(); return; }
       cloudReload();
